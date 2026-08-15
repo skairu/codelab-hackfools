@@ -1,13 +1,71 @@
 import {
   Plane,
   CarFront,
-  Activity,
 } from "lucide-react";
 
 import {
   Link,
   useLocation,
 } from "react-router-dom";
+
+// ---------------------------------------------------------------------------
+// Ícone Customizado: Dinossauro com Radar (Baseado na referência)
+// ---------------------------------------------------------------------------
+function DinoRadarIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      stroke="currentColor"
+      className={className}
+      strokeWidth="4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* --- Fundo: Radar --- */}
+      <circle cx="50" cy="45" r="42" />
+      <circle cx="50" cy="45" r="26" />
+      <circle cx="50" cy="45" r="10" />
+      
+      {/* Linha de varredura do radar */}
+      <path d="M50 45 L20 15" />
+      
+      {/* Pontos (blips) do radar */}
+      <circle cx="72" cy="32" r="4" />
+      <circle cx="80" cy="75" r="4" />
+
+      {/* --- Plano de fundo do Dinossauro: Pernas Traseiras --- */}
+      {/* Perna Dianteira (fundo) */}
+      <path d="M 34 72 L 44 88 L 34 88 Z" fill="#081C15" />
+      {/* Perna Traseira (fundo) */}
+      <path d="M 64 65 L 76 88 L 66 88 Z" fill="#081C15" />
+
+      {/* --- Primeiro Plano: Corpo Principal do Dinossauro --- */}
+      {/* O fill="#081C15" (cor do fundo do header) garante que as linhas do radar sejam escondidas atrás do dinossauro */}
+      <path
+        d="
+          M 40 45
+          Q 70 55 95 72
+          Q 75 68 64 62
+          L 64 88
+          L 48 88
+          L 50 72
+          Q 42 75 34 72
+          L 34 88
+          L 18 88
+          L 22 60
+          Q 12 30 10 12
+          A 4 4 0 0 1 16 8
+          L 20 12
+          A 2 2 0 0 1 16 16
+          Q 20 35 40 45
+          Z
+        "
+        fill="#081C15"
+      />
+    </svg>
+  );
+}
 
 const servicos = [
   {
@@ -59,7 +117,8 @@ export default function Cabecalho() {
               "
             />
 
-            <Activity className="h-5 w-5 text-[#74C69D]" />
+            {/* Novo Ícone do Dinossauro aplicado aqui */}
+            <DinoRadarIcon className="h-7 w-7 text-[#74C69D]" />
           </div>
 
           <div className="flex flex-col justify-center">

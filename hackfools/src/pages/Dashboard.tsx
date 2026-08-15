@@ -136,14 +136,29 @@ function generateMockIncidents(): Incident[] {
         const bucket = pickHourBucket(rand);
         const horaDoDia = bucket.start + Math.floor(rand() * (bucket.end - bucket.start));
 
+        const diasAtras = Math.floor(rand() * 90);
+
+        // Define um tempo base dependendo de quão antigo é o incidente.
+        // Garante que todos sejam > 1h (3600s) e que as médias entre 7, 30 e 90 dias 
+        // sejam diferentes, porém com valores próximos.
+        let baseTempo = 3600;
+        if (diasAtras <= 7) {
+          baseTempo = 3900; // ~ 1h 05m
+        } else if (diasAtras <= 30) {
+          baseTempo = 4200; // ~ 1h 10m
+        } else {
+          baseTempo = 4600; // ~ 1h 16m
+        }
+
         incidentes.push({
           id: `inc-${idCounter}`,
           regiao,
           modo,
           especie,
-          diasAtras: Math.floor(rand() * 90),
+          diasAtras,
           horaDoDia,
-          tempoResolucaoSeg: Math.round(3600 + rand() * 3600),
+          // Soma o baseTempo com até 15 min extras de variação randômica
+          tempoResolucaoSeg: Math.round(baseTempo + rand() * 900),
           estresse: Math.min(100, Math.round(20 + rand() * 75)),
         });
       }
@@ -485,7 +500,6 @@ export default function DashboardStats() {
                   Pico de atividade por horário{" "}
                   <span className="text-xs text-[#74C69D]">· maior volume: {picoPrincipal.label}</span>
                 </p>
-                {/* Aqui alteramos de h-32 para h-40 para evitar overflow */}
                 <div className="mt-3 flex h-40 items-end gap-2 rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4">
                   {picoHorario.map((p) => (
                     <div key={p.label} className="flex flex-1 flex-col items-center gap-1">
