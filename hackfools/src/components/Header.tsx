@@ -1,20 +1,24 @@
 import { Plane, CarFront, Waves, Activity } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const servicos = [
   {
     label: "AÉREO",
     description: "Controle de Tráfego Aéreo",
     icon: Plane,
+    path: "/",
   },
   {
     label: "TERRESTRE",
     description: "Controle de Tráfego Terrestre",
     icon: CarFront,
+    path: "/",
   },
   {
     label: "MARÍTIMO",
     description: "Controle de Tráfego Marítimo",
     icon: Waves,
+    path: "/",
   },
 ];
 
@@ -30,8 +34,8 @@ export default function Cabecalho() {
 
       <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
 
-        {/* Marca */}
-        <div className="flex items-center gap-3">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-3">
           <div
             className="
               relative flex h-10 w-10 items-center justify-center
@@ -73,7 +77,7 @@ export default function Cabecalho() {
               Rede Planetária de Tráfego
             </p>
           </div>
-        </div>
+        </Link>
 
         {/* Navegação */}
         <nav className="hidden items-center gap-2 md:flex">
@@ -81,8 +85,9 @@ export default function Cabecalho() {
             const Icone = servico.icon;
 
             return (
-              <button
+              <Link
                 key={servico.label}
+                to={servico.path}
                 className="
                   group relative flex items-center gap-3
                   border border-transparent
@@ -137,13 +142,14 @@ export default function Cabecalho() {
                     {servico.description}
                   </div>
                 </div>
-              </button>
+              </Link>
             );
           })}
         </nav>
 
         {/* Acesso */}
-        <button
+        <Link
+          to="/dashboard"
           className="
             group relative hidden sm:flex
             items-center gap-2
@@ -193,7 +199,7 @@ export default function Cabecalho() {
           </span>
 
           LOGIN
-        </button>
+        </Link>
       </div>
     </header>
   );
