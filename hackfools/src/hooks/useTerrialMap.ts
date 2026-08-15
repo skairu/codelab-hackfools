@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../services/api";
-import type { CityGraph, Dinosaur, WebSocketMessage } from "../types/dinosaur";
+import type { CityGraph, Dinosaur, RouteData, WebSocketMessage } from "../types/dinosaur";
 
 export interface MapState {
   graph: CityGraph | null;
@@ -8,6 +8,8 @@ export interface MapState {
   loading: boolean;
   error: string | null;
   wsConnected: boolean;
+  route: RouteData | null;
+  selectedNodes: [string, string] | null;
 }
 
 export function useTerrialMap() {
@@ -19,6 +21,8 @@ export function useTerrialMap() {
     loading: true,
     error: null,
     wsConnected: false,
+    route: null,
+    selectedNodes: null,
   });
 
   // Inicializa o mapa
@@ -53,6 +57,11 @@ export function useTerrialMap() {
               setState((prev) => ({
                 ...prev,
                 dinosaurs: message.data,
+              }));
+            } else if (message.type === "route_update") {
+              setState((prev) => ({
+                ...prev,
+                route: message.data,
               }));
             }
           },
@@ -98,8 +107,97 @@ export function useTerrialMap() {
       if (wsRef.current) {
         wsRef.current.close();
       }
+      // Deleta a rota ao desmontar
+      if (state.route) {
+        api.deleteRoute(clientIdRef.current).catch((error) => {
+          console.error("Error deleting route on cleanup:", error);
+        });
+      }
     };
   }, []);
 
-  return { state, clientId: clientIdRef.current, ws: wsRef.current };
+  /**
+   * Seleciona um nó para origem/destino
+   */
+  const selectNode = async (nodeId: string) => {
+    setState((prev) => {
+      const currentSelected = prev.selectedNodes;
+
+      // Se já tem dois nós selecionados, limpa e começa com o novo
+      if (currentSelected && currentSelected.length === 2) {
+        return {
+          ...prev,
+          selectedNodes: [nodeId] as [string],
+          route: null,
+        };
+      }
+
+      // Se é o mesmo nó clicado duas vezes, ignora
+      if (currentSelected?.[0] === nodeId) {
+        return prev;
+      }
+
+      // Adiciona o novo nó
+      if (!currentSelected) {
+        return {
+          ...prev,
+          selectedNodes: [nodeId] as [string],
+        };
+      }
+
+      // Tem um nó selecionado, agora tem dois
+      return {
+        ...prev,
+        selectedNodes: [currentSelected[0], nodeId] as [string, string],
+      };
+    });
+
+    // Calcula a rota se temos dois nós selecionados
+    setState((prev) => {
+      if (prev.selectedNodes && prev.selectedNodes.length === 2) {
+        // Calcula a rota
+        (async () => {
+          try {
+            const route = await api.calculateRoute(
+              clientIdRef.current,
+              prev.selectedNodes![0],
+              prev.selectedNodes![1]
+            );
+            setState((prevState) => ({
+              ...prevState,
+              route,
+            }));
+          } catch (error) {
+            console.error("Error calculating route:", error);
+            setState((prevState) => ({
+              ...prevState,
+              error: `Erro ao calcular rota: ${error instanceof Error ? error.message : "Unknown error"}`,
+            }));
+          }
+        })();
+      }
+      return prev;
+    });
+  };
+
+  /**
+   * Limpa a rota e os nós selecionados
+   */
+  const clearRoute = async () => {
+    if (state.route) {
+      try {
+        await api.deleteRoute(clientIdRef.current);
+      } catch (error) {
+        console.error("Error deleting route:", error);
+      }
+    }
+
+    setState((prev) => ({
+      ...prev,
+      route: null,
+      selectedNodes: null,
+    }));
+  };
+
+  return { state, clientId: clientIdRef.current, ws: wsRef.current, selectNode, clearRoute };
 }

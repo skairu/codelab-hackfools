@@ -1,9 +1,9 @@
-import { Activity } from "lucide-react";
+import { Activity, Trash2 } from "lucide-react";
 import { TerrestrialMap } from "../components/TerrestrialMap";
 import { useTerrialMap } from "../hooks/useTerrialMap";
 
 export default function Terrestre() {
-  const { state, clientId } = useTerrialMap();
+  const { state, clientId, selectNode, clearRoute } = useTerrialMap();
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-[#050B0E] text-[#B7E4C7]">
@@ -140,6 +140,56 @@ export default function Terrestre() {
             </div>
           </div>
 
+          {/* Rota */}
+          <div className="border-b border-[#2D6A4F]/30 p-5">
+            <div className="mb-3 font-mono text-[9px] uppercase tracking-[0.2em] text-[#74C69D]/40">
+              Sistema de Roteamento
+            </div>
+
+            {state.selectedNodes ? (
+              <div className="space-y-3">
+                <div className="space-y-2 font-mono text-[9px] text-[#B7E4C7]/60">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-[#52B788]" />
+                    <span>Origem: {state.selectedNodes[0]}</span>
+                  </div>
+                  {state.selectedNodes[1] && (
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-red-500" />
+                      <span>Destino: {state.selectedNodes[1]}</span>
+                    </div>
+                  )}
+                </div>
+
+                {state.route && (
+                  <div className="space-y-2 border-t border-[#2D6A4F]/30 pt-3 font-mono text-[9px] text-[#95D5B2]">
+                    <div>
+                      <span className="text-[#74C69D]">Distância:</span> {(state.route.distance_m / 1000).toFixed(2)} km
+                    </div>
+                    <div>
+                      <span className="text-[#74C69D]">Tempo:</span> {Math.round(state.route.duration_s)} s
+                    </div>
+                    <div>
+                      <span className="text-[#74C69D]">Nós:</span> {state.route.path.length}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={clearRoute}
+                  className="mt-3 w-full flex items-center justify-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-[9px] font-mono text-red-400 transition-all hover:bg-red-500/20 hover:border-red-500/80"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  LIMPAR ROTA
+                </button>
+              </div>
+            ) : (
+              <div className="font-mono text-[9px] text-[#74C69D]/60">
+                Clique em dois nós do mapa para criar uma rota
+              </div>
+            )}
+          </div>
+
           {/* Informações do cliente */}
           <div className="border-b border-[#2D6A4F]/30 p-5">
             <div className="mb-3 font-mono text-[9px] uppercase tracking-[0.2em] text-[#74C69D]/40">
@@ -190,6 +240,9 @@ export default function Terrestre() {
             loading={state.loading}
             error={state.error}
             wsConnected={state.wsConnected}
+            route={state.route}
+            selectedNodes={state.selectedNodes}
+            onNodeSelect={selectNode}
           />
         </main>
       </div>

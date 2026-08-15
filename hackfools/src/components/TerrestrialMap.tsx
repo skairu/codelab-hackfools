@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import type { CityGraph, Dinosaur, GraphNode } from "../types/dinosaur";
+import type { CityGraph, Dinosaur, GraphNode, RouteData } from "../types/dinosaur";
 
 interface MapBounds {
   minLat: number;
@@ -21,6 +21,9 @@ interface TerrestrialMapProps {
   loading: boolean;
   error: string | null;
   wsConnected: boolean;
+  route?: RouteData | null;
+  selectedNodes?: [string, string] | null;
+  onNodeSelect?: (nodeId: string) => void;
 }
 
 /**
@@ -108,6 +111,9 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
   loading,
   error,
   wsConnected,
+  route,
+  selectedNodes,
+  onNodeSelect,
 }) => {
   const mapBounds = useMemo(() => calculateMapBounds(graph), [graph]);
 
@@ -238,20 +244,114 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
           ))}
         </g>
 
+        {/* Rota calculada */}
+        {route && route.path.length > 1 && mapBounds && (
+          <g>
+            {route.coordinates.map((coord, idx) => {
+              if (idx === route.coordinates.length - 1) return null;
+
+              const currentPixel = latLonToPixels(
+                coord.lat,
+                coord.lon,
+                mapBounds,
+                svgDimensions.width,
+                svgDimensions.height
+              );
+              const nextPixel = latLonToPixels(
+                route.coordinates[idx + 1].lat,
+                route.coordinates[idx + 1].lon,
+                mapBounds,
+                svgDimensions.width,
+                svgDimensions.height
+              );
+
+              return (
+                <line
+                  key={`route-segment-${idx}`}
+                  x1={currentPixel.x}
+                  y1={currentPixel.y}
+                  x2={nextPixel.x}
+                  y2={nextPixel.y}
+                  stroke="#40E0D0"
+                  strokeWidth="3"
+                  opacity="0.9"
+                  style={{ filter: "drop-shadow(0 0 8px #40E0D0)" }}
+                />
+              );
+            })}
+
+            {/* Pontos de controle da rota */}
+            {route.coordinates.map((coord, idx) => {
+              const pixel = latLonToPixels(
+                coord.lat,
+                coord.lon,
+                mapBounds,
+                svgDimensions.width,
+                svgDimensions.height
+              );
+
+              const isStart = idx === 0;
+              const isEnd = idx === route.coordinates.length - 1;
+
+              return (
+                <circle
+                  key={`route-point-${idx}`}
+                  cx={pixel.x}
+                  cy={pixel.y}
+                  r={isStart || isEnd ? 6 : 3}
+                  fill={isStart ? "#52B788" : isEnd ? "#EF4444" : "#40E0D0"}
+                  opacity="0.9"
+                  style={{
+                    filter: `drop-shadow(0 0 6px ${isStart ? "#52B788" : isEnd ? "#EF4444" : "#40E0D0"})`,
+                  }}
+                />
+              );
+            })}
+          </g>
+        )}
+
         {/* Nós (interseções) */}
         <g>
-          {nodes.map((node) => (
-            <circle
-              key={node.id}
-              cx={node.pixel.x}
-              cy={node.pixel.y}
-              r="4"
-              fill="#071013"
-              stroke="#74C69D"
-              strokeWidth="1"
-              opacity="0.8"
-            />
-          ))}
+          {nodes.map((node) => {
+            const isSelected =
+              selectedNodes &&
+              (selectedNodes[0] === node.id || selectedNodes[1] === node.id);
+            const isOrigin = selectedNodes && selectedNodes[0] === node.id;
+            const isDestination = selectedNodes && selectedNodes[1] === node.id;
+
+            return (
+              <g key={node.id} onClick={() => onNodeSelect?.(node.id)}>
+                {/* Círculo de seleção (quando selecionado) */}
+                {isSelected && (
+                  <circle
+                    cx={node.pixel.x}
+                    cy={node.pixel.y}
+                    r="16"
+                    fill={isOrigin ? "#52B788" : "#EF4444"}
+                    opacity="0.2"
+                    style={{ pointerEvents: "none" }}
+                  />
+                )}
+
+                {/* Nó principal */}
+                <circle
+                  cx={node.pixel.x}
+                  cy={node.pixel.y}
+                  r="4"
+                  fill={isOrigin ? "#52B788" : isDestination ? "#EF4444" : "#071013"}
+                  stroke={isSelected ? (isOrigin ? "#52B788" : "#EF4444") : "#74C69D"}
+                  strokeWidth={isSelected ? "2" : "1"}
+                  opacity="0.8"
+                  style={{
+                    cursor: "pointer",
+                    filter: isSelected
+                      ? `drop-shadow(0 0 8px ${isOrigin ? "#52B788" : "#EF4444"})`
+                      : "none",
+                  }}
+                />
+              </g>
+            );
+          })}
         </g>
 
         {/* Dinossauros */}
@@ -313,6 +413,43 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Rota Info Overlay */}
+      {onNodeSelect && (
+        <div className="absolute left-4 bottom-4 z-30 border border-[#40E0D0]/50 bg-[#07120F]/90 p-3 font-mono text-[10px] max-w-xs">
+          <div className="text-[#40E0D0] font-mono text-[9px] uppercase tracking-wide mb-2">
+            Modo de Roteamento
+          </div>
+          {!selectedNodes ? (
+            <div className="text-[#B7E4C7]/70">
+              <div>▶ Clique no primeiro nó (origem)</div>
+              <div className="mt-1 text-[9px] text-[#74C69D]/60">em verde</div>
+            </div>
+          ) : selectedNodes.length === 1 ? (
+            <div className="text-[#B7E4C7]/70">
+              <div>▶ Clique no segundo nó (destino)</div>
+              <div className="mt-1 text-[9px] text-[#74C69D]/60">em vermelho</div>
+              <div className="mt-2 text-[9px]">
+                Origem: <span className="text-[#52B788]">{selectedNodes[0]}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-[#40E0D0]">
+              <div>✓ Rota calculada!</div>
+              <div className="mt-2 text-[9px]">
+                <div>Origem: <span className="text-[#52B788]">{selectedNodes[0]}</span></div>
+                <div>Destino: <span className="text-red-400">{selectedNodes[1]}</span></div>
+              </div>
+              {route && (
+                <div className="mt-2 text-[9px] text-[#95D5B2]">
+                  <div>Distância: {(route.distance_m / 1000).toFixed(2)} km</div>
+                  <div>Tempo: {Math.round(route.duration_s)} s</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Status dos dinossauros */}
       <div className="absolute bottom-4 right-4 z-30 space-y-1 border border-[#2D6A4F]/50 bg-[#07120F]/90 p-3 font-mono text-[10px]">

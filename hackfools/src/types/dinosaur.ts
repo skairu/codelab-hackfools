@@ -37,15 +37,17 @@ export interface DinosUpdatedMessage {
   data: Dinosaur[];
 }
 
+export interface RouteData {
+  path: string[];
+  coordinates: Array<{ lat: number; lon: number }>;
+  distance_m: number;
+  duration_s: number;
+  computed_at: number;
+}
+
 export interface RouteUpdateMessage {
   type: "route_update";
-  data: {
-    path: string[];
-    coordinates: Array<{ lat: number; lon: number }>;
-    distance_m: number;
-    duration_s: number;
-    computed_at: number;
-  };
+  data: RouteData;
 }
 
 export type WebSocketMessage = DinosUpdatedMessage | RouteUpdateMessage;
