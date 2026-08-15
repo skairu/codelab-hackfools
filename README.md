@@ -6,9 +6,17 @@ https://docs.google.com/document/d/1LUsIFPaGHrgFMvzYlbThzzYX2OLgIR6viFevShPh_Mg/
 
 https://canva.link/xob2j15ulu19cb9
 
-# Front-end
+# How to run?
 ```
 cd hackfools
 npm install
 npm run dev
+```
+
+```
+cd backend
+python -m venv .venv
+source .venv/bin/activate # Windows: .venv/Scripts/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
 ```
