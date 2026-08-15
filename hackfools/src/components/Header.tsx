@@ -161,7 +161,7 @@ export default function Cabecalho() {
 
         {/* Acesso */}
         <Link
-          to="/dashboard"
+          to="/login"
           className="
             group relative hidden sm:flex
             items-center gap-2

@@ -3,6 +3,7 @@
 // repetir strings como "/dashboard", "/aereo", etc.
 
 export const routePaths = {
+  login: "/login",
   home: "/",
   terrestre: "/",
   aereo: "/aereo",

@@ -1,6 +1,7 @@
 import { useRoutes } from "react-router-dom";
 
 import Header from "./components/Header";
+import LoginPage from "./pages/Login";
 
 import Terrestre from "./pages/Terrestre";
 import Dashboard from "./pages/Dashboard";
@@ -10,6 +11,10 @@ import ControlPanel from "./pages/MapAdmin";
 import { routePaths } from "./rotes/routes.ts";
 
 const routes = [
+  {
+    path: routePaths.login,
+    element: <LoginPage />,
+  },
   {
     path: routePaths.terrestre,
     element: <Terrestre />,
