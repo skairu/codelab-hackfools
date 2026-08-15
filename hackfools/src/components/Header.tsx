@@ -62,24 +62,25 @@ export default function Cabecalho() {
             <Activity className="h-5 w-5 text-[#74C69D]" />
           </div>
 
-          <div>
+          <div className="flex flex-col justify-center">
             <h1
               className="
-                font-mono text-lg font-bold
-                tracking-[0.2em]
-                text-[#D8F3DC]
+                font-mono text-2xl font-extrabold
+                tracking-[0.15em]
+                bg-gradient-to-r from-[#D8F3DC] via-[#95D5B2] to-[#52B788]
+                bg-clip-text text-transparent
+                drop-shadow-[0_0_12px_rgba(82,183,136,0.5)]
               "
             >
-              NEXUS
-              <span className="text-[#52B788]"> //</span>
-              TRÁFEGO
+              P-Mob
             </h1>
 
             <p
               className="
+                mt-0.5
                 font-mono text-[9px] uppercase
                 tracking-[0.25em]
-                text-[#74C69D]/50
+                text-[#74C69D]/60
               "
             >
               Rede Planetária de Tráfego
