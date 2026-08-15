@@ -5,7 +5,7 @@ import Header from "./components/Header";
 import Terrestre from "./pages/Terrestre";
 import Dashboard from "./pages/Dashboard";
 import Aereo from "./pages/Aereo";
-import MapAdmin from "./pages/MapAdmin";
+import ControlPanel from "./pages/MapAdmin";
 
 import { routePaths } from "./rotes/routes.ts";
 
@@ -24,7 +24,7 @@ const routes = [
   },
   {
     path: routePaths.mapadmin,
-    element: <MapAdmin />
+    element: <ControlPanel />
   }
 ];
 
