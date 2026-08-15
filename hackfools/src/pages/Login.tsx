@@ -59,20 +59,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+    <div className="relative flex min-h-screen items-center justify-center font-mono text-white px-4">
+      
+      {/* 
+        Fundo global mantido atrás de tudo (-z-10) 
+        Isso garante que seu header global apareça normalmente no topo.
+      */}
+      <div
+        className="pointer-events-none fixed inset-0 -z-10"
+        style={{
+          background: "linear-gradient(180deg, #020705 0%, #05140D 50%, #010302 100%)",
+        }}
+      >
+        <div className="absolute left-1/2 top-0 h-[600px] w-[1000px] -translate-x-1/2 rounded-full bg-[#2D6A4F]/10 blur-[150px]" />
+      </div>
+
+      <div className="w-full max-w-sm rounded-2xl border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-6 backdrop-blur-sm shadow-[0_0_30px_rgba(82,183,136,0.05)]">
+        
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
-            <UserIcon className="h-6 w-6 text-blue-400" strokeWidth={1.75} />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-[#52B788]/40 bg-[#1B4332]/60 shadow-[0_0_15px_rgba(82,183,136,0.1)]">
+            <UserIcon className="h-6 w-6 text-[#74C69D]" strokeWidth={1.75} />
           </div>
-          <h1 className="mt-4 text-lg font-medium text-white">Acessar plataforma</h1>
-          <p className="mt-1 text-sm text-zinc-500">Controle de tráfego pré-histórico</p>
+          <h1 className="mt-4 text-lg font-bold uppercase tracking-wide text-[#D8F3DC]">
+            Acesso Restrito
+          </h1>
+          <p className="mt-1 text-[10px] uppercase tracking-widest text-[#74C69D]">
+            Rede planetária de tráfego
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <label className="block">
-            <span className="mb-1.5 block text-xs font-medium text-zinc-400">
-              Nome de usuário
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#95D5B2]">
+              Credencial
             </span>
             <input
               type="text"
@@ -80,12 +99,14 @@ export default function LoginPage() {
               onChange={(e) => setNome(e.target.value)}
               placeholder="user ou admin"
               autoComplete="username"
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-blue-500"
+              className="w-full rounded-lg border border-[#2D6A4F]/60 bg-[#081C15]/80 px-3 py-2.5 text-sm text-[#D8F3DC] placeholder:text-[#2D6A4F] outline-none transition-colors focus:border-[#52B788] focus:bg-[#0B241B]"
             />
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-xs font-medium text-zinc-400">Senha</span>
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#95D5B2]">
+              Código de Acesso
+            </span>
             <div className="relative">
               <input
                 type={mostrarSenha ? "text" : "password"}
@@ -93,12 +114,12 @@ export default function LoginPage() {
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="••••"
                 autoComplete="current-password"
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 pr-10 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-blue-500"
+                className="w-full rounded-lg border border-[#2D6A4F]/60 bg-[#081C15]/80 px-3 py-2.5 pr-10 text-sm tracking-widest text-[#D8F3DC] placeholder:text-[#2D6A4F] outline-none transition-colors focus:border-[#52B788] focus:bg-[#0B241B]"
               />
               <button
                 type="button"
                 onClick={() => setMostrarSenha((v) => !v)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-300"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#52B788] transition-colors hover:text-[#95D5B2]"
                 aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
               >
                 {mostrarSenha ? (
@@ -110,22 +131,31 @@ export default function LoginPage() {
             </div>
           </label>
 
-          {erro && <p className="text-sm text-red-400">{erro}</p>}
+          {erro && (
+            <div className="rounded-md border border-red-900/50 bg-red-500/10 py-2 text-center text-[11px] font-medium uppercase tracking-wide text-red-400">
+              {erro}
+            </div>
+          )}
 
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-500 bg-blue-500/10 px-3 py-2.5 text-sm font-medium text-blue-400 transition-colors hover:bg-blue-500/20"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#52B788]/60 bg-[#1B4332]/40 px-3 py-3 text-xs font-bold uppercase tracking-widest text-[#D8F3DC] transition-all hover:bg-[#2D6A4F]/60 hover:shadow-[0_0_15px_rgba(82,183,136,0.2)]"
           >
-            <LogIn className="h-4 w-4" strokeWidth={1.75} />
-            Entrar
+            <LogIn className="h-4 w-4 text-[#74C69D]" strokeWidth={2} />
+            Autenticar
           </button>
         </form>
 
-        <p className="mt-5 text-center text-xs text-zinc-600">
-          Demo sem back-end — use{" "}
-          <span className="text-zinc-400">user / 123</span> ou{" "}
-          <span className="text-zinc-400">admin / 456</span>.
-        </p>
+        <div className="mt-6 border-t border-[#2D6A4F]/30 pt-4 text-center">
+          <p className="text-[10px] uppercase tracking-wide text-[#40916C]">
+            Acesso Temporário — Demo
+          </p>
+          <div className="mt-1 flex justify-center gap-4 text-xs font-medium text-[#74C69D]">
+            <span>user / 123</span>
+            <span className="text-[#2D6A4F]">|</span>
+            <span>admin / 456</span>
+          </div>
+        </div>
       </div>
     </div>
   );

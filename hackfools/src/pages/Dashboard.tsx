@@ -43,7 +43,6 @@ const MODO_LABEL: Record<Modo, string> = {
 };
 
 // Cores seguindo a paleta verde:
-// Aéreo ganha um verde luminoso/menta, Terrestre ganha um verde floresta profundo
 const MODO_COR: Record<Modo, string> = {
   aereo: "bg-[#74C69D]",
   terrestre: "bg-[#40916C]",
@@ -129,7 +128,6 @@ function generateMockIncidents(): Incident[] {
   let idCounter = 0;
   REGIOES.forEach((regiao, ri) => {
     MODOS.forEach((modo, mi) => {
-      // Multiplicador bastante aumentado para gerar milhares de incidentes
       const quantidade = Math.round(rand() * 100 + pesoRegiao[ri] * pesoModo[mi] * 80) + 50;
       for (let i = 0; i < quantidade; i++) {
         idCounter += 1;
@@ -224,7 +222,6 @@ function statusPrioridade(score: number): { tier: Tier; texto: string } {
   return { tier: "baixa", texto: "Baixa prioridade" };
 }
 
-// Com mais incidentes, calculamos baseados na frequência diária
 function statusReincidencia(freqDiaria: number): { tier: Tier; texto: string } {
   if (freqDiaria >= 4) return { tier: "alta", texto: "Candidato a bio-corredor" };
   if (freqDiaria >= 2) return { tier: "media", texto: "Monitoramento estendido" };
@@ -339,275 +336,264 @@ export default function DashboardStats() {
   const especieMaisRecorrente = especiesTop[0]?.chave ?? "—";
 
   return (
-    <div className="relative min-h-screen bg-[#040D09] font-mono text-white">
-      {/* Fundo bem mais escuro com gradiente verde suave integrado */}
-      <div
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          background: "linear-gradient(180deg, #020705 0%, #05140D 50%, #010302 100%)",
-        }}
-      >
-        <div className="absolute left-1/2 top-0 h-[600px] w-[1000px] -translate-x-1/2 rounded-full bg-[#2D6A4F]/10 blur-[150px]" />
-      </div>
+    <div className="w-full font-mono text-white">
+      <main className="mx-auto max-w-5xl px-4 py-8 w-full">
+        <h1 className="text-xl font-bold uppercase tracking-wide text-[#D8F3DC]">Estatísticas</h1>
+        <p className="mt-1 text-sm text-[#95D5B2]">
+          Visão retrospectiva de incidentes por período, região e modo.
+        </p>
 
-      <div className="relative z-10 flex flex-col min-h-screen">
-        <main className="mx-auto max-w-5xl px-4 py-8 w-full">
-          <h1 className="text-xl font-bold uppercase tracking-wide text-[#D8F3DC]">Estatísticas</h1>
-          <p className="mt-1 text-sm text-[#95D5B2]">
-            Visão retrospectiva de incidentes por período, região e modo.
-          </p>
+        {/* Filtros */}
+        <div className="mt-6 flex flex-wrap gap-4">
+          <label className="flex flex-col gap-1 text-[10px] uppercase tracking-wide text-[#74C69D]">
+            Período
+            <select
+              className="h-10 w-40 rounded-md border border-[#2D6A4F]/60 bg-[#0B241B]/80 px-3 text-sm text-[#D8F3DC] focus:border-[#52B788] focus:outline-none"
+              value={periodo}
+              onChange={(e) => setPeriodo(Number(e.target.value) as FiltroPeriodo)}
+            >
+              <option value={7}>Últimos 7 dias</option>
+              <option value={30}>Últimos 30 dias</option>
+              <option value={90}>Últimos 90 dias</option>
+            </select>
+          </label>
 
-          {/* Filtros */}
-          <div className="mt-6 flex flex-wrap gap-4">
-            <label className="flex flex-col gap-1 text-[10px] uppercase tracking-wide text-[#74C69D]">
-              Período
-              <select
-                className="h-10 w-40 rounded-md border border-[#2D6A4F]/60 bg-[#0B241B]/80 px-3 text-sm text-[#D8F3DC] focus:border-[#52B788] focus:outline-none"
-                value={periodo}
-                onChange={(e) => setPeriodo(Number(e.target.value) as FiltroPeriodo)}
-              >
-                <option value={7}>Últimos 7 dias</option>
-                <option value={30}>Últimos 30 dias</option>
-                <option value={90}>Últimos 90 dias</option>
-              </select>
-            </label>
+          <label className="flex flex-col gap-1 text-[10px] uppercase tracking-wide text-[#74C69D]">
+            Região
+            <select
+              className="h-10 w-44 rounded-md border border-[#2D6A4F]/60 bg-[#0B241B]/80 px-3 text-sm text-[#D8F3DC] focus:border-[#52B788] focus:outline-none"
+              value={regiao}
+              onChange={(e) => setRegiao(e.target.value)}
+            >
+              <option value="todas">Todas as regiões</option>
+              {REGIOES.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </label>
 
-            <label className="flex flex-col gap-1 text-[10px] uppercase tracking-wide text-[#74C69D]">
-              Região
-              <select
-                className="h-10 w-44 rounded-md border border-[#2D6A4F]/60 bg-[#0B241B]/80 px-3 text-sm text-[#D8F3DC] focus:border-[#52B788] focus:outline-none"
-                value={regiao}
-                onChange={(e) => setRegiao(e.target.value)}
-              >
-                <option value="todas">Todas as regiões</option>
-                {REGIOES.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <label className="flex flex-col gap-1 text-[10px] uppercase tracking-wide text-[#74C69D]">
+            Modo
+            <select
+              className="h-10 w-40 rounded-md border border-[#2D6A4F]/60 bg-[#0B241B]/80 px-3 text-sm text-[#D8F3DC] focus:border-[#52B788] focus:outline-none"
+              value={modo}
+              onChange={(e) => setModo(e.target.value as FiltroModo)}
+            >
+              <option value="todos">Todos os modos</option>
+              {MODOS.map((m) => (
+                <option key={m} value={m}>
+                  {MODO_LABEL[m]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
-            <label className="flex flex-col gap-1 text-[10px] uppercase tracking-wide text-[#74C69D]">
-              Modo
-              <select
-                className="h-10 w-40 rounded-md border border-[#2D6A4F]/60 bg-[#0B241B]/80 px-3 text-sm text-[#D8F3DC] focus:border-[#52B788] focus:outline-none"
-                value={modo}
-                onChange={(e) => setModo(e.target.value as FiltroModo)}
-              >
-                <option value="todos">Todos os modos</option>
-                {MODOS.map((m) => (
-                  <option key={m} value={m}>
-                    {MODO_LABEL[m]}
-                  </option>
-                ))}
-              </select>
-            </label>
+        {filtrados.length === 0 ? (
+          <div className="mt-10 rounded-lg border border-dashed border-[#2D6A4F]/60 py-16 text-center text-sm text-[#95D5B2]">
+            Nenhum incidente encontrado para esse filtro.
           </div>
-
-          {filtrados.length === 0 ? (
-            <div className="mt-10 rounded-lg border border-dashed border-[#2D6A4F]/60 py-16 text-center text-sm text-[#95D5B2]">
-              Nenhum incidente encontrado para esse filtro.
+        ) : (
+          <>
+            {/* KPIs */}
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm">
+                <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Tempo médio</p>
+                <p className="mt-1 text-2xl font-semibold text-[#D8F3DC]">{formatarTempo(tempoMedio)}</p>
+              </div>
+              <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm">
+                <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Incidentes</p>
+                <p className="mt-1 text-2xl font-semibold text-[#D8F3DC]">{filtrados.length}</p>
+              </div>
+              <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm">
+                <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Modo principal</p>
+                <p className="mt-1 text-2xl font-semibold text-[#D8F3DC] whitespace-nowrap">{modoMaisAcionado}</p>
+              </div>
+              <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm">
+                <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Estresse fauna</p>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <p className="text-2xl font-semibold text-[#D8F3DC]">{Math.round(estresseMedio)}</p>
+                  <Badge tier={estadoEstresseMedio.tier} texto={estadoEstresseMedio.nivel} />
+                </div>
+              </div>
+              <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm overflow-hidden">
+                <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Top Espécie</p>
+                <p className="mt-1 text-lg font-semibold text-[#D8F3DC] whitespace-nowrap overflow-hidden text-ellipsis" title={especieMaisRecorrente}>
+                  {especieMaisRecorrente}
+                </p>
+              </div>
             </div>
-          ) : (
-            <>
-              {/* KPIs */}
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm">
-                  <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Tempo médio</p>
-                  <p className="mt-1 text-2xl font-semibold text-[#D8F3DC]">{formatarTempo(tempoMedio)}</p>
-                </div>
-                <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm">
-                  <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Incidentes</p>
-                  <p className="mt-1 text-2xl font-semibold text-[#D8F3DC]">{filtrados.length}</p>
-                </div>
-                <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm">
-                  <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Modo principal</p>
-                  <p className="mt-1 text-2xl font-semibold text-[#D8F3DC] whitespace-nowrap">{modoMaisAcionado}</p>
-                </div>
-                <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm">
-                  <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Estresse fauna</p>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <p className="text-2xl font-semibold text-[#D8F3DC]">{Math.round(estresseMedio)}</p>
-                    <Badge tier={estadoEstresseMedio.tier} texto={estadoEstresseMedio.nivel} />
-                  </div>
-                </div>
-                <div className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4 backdrop-blur-sm overflow-hidden">
-                  <p className="text-[10px] uppercase tracking-wide text-[#74C69D]">Top Espécie</p>
-                  <p className="mt-1 text-lg font-semibold text-[#D8F3DC] whitespace-nowrap overflow-hidden text-ellipsis" title={especieMaisRecorrente}>
-                    {especieMaisRecorrente}
-                  </p>
-                </div>
-              </div>
 
-              {/* Bem-estar e governança */}
-              <div className="mt-10 border-t border-[#2D6A4F]/30 pt-6">
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-[#95D5B2]">
-                  Bem-estar e governança
-                </h2>
+            {/* Bem-estar e governança */}
+            <div className="mt-10 border-t border-[#2D6A4F]/30 pt-6">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-[#95D5B2]">
+                Bem-estar e governança
+              </h2>
 
-                <div className="mt-4">
-                  <p className="text-sm text-[#B7E4C7]">
-                    Exposição humana × risco{" "}
-                    <span className="text-xs text-[#74C69D]">(densidade populacional cruzada com frequência de incidentes)</span>
-                  </p>
-                  <div className="mt-3 space-y-3">
-                    {exposicaoRisco.map((r) => {
-                      const prioridade = statusPrioridade(r.score);
-                      return (
-                        <div key={r.regiao} className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-[#D8F3DC] whitespace-nowrap">{r.regiao}</span>
-                            <Badge tier={prioridade.tier} texto={prioridade.texto} />
-                          </div>
-                          <div className="mt-2 space-y-1.5">
-                            <div className="flex items-center gap-3">
-                              <span className="w-20 shrink-0 text-[10px] uppercase tracking-wide text-[#74C69D]">Densidade</span>
-                              <div className="h-2 flex-1 rounded bg-[#081C15]">
-                                <div className="h-2 rounded bg-[#74C69D]" style={{ width: `${r.densNorm * 100}%` }} />
-                              </div>
-                              <span className="w-28 shrink-0 text-right text-[11px] text-[#95D5B2] whitespace-nowrap">
-                                {formatarDensidade(r.densidade)}
-                              </span>
+              <div className="mt-4">
+                <p className="text-sm text-[#B7E4C7]">
+                  Exposição humana × risco{" "}
+                  <span className="text-xs text-[#74C69D]">(densidade populacional cruzada com frequência de incidentes)</span>
+                </p>
+                <div className="mt-3 space-y-3">
+                  {exposicaoRisco.map((r) => {
+                    const prioridade = statusPrioridade(r.score);
+                    return (
+                      <div key={r.regiao} className="rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-[#D8F3DC] whitespace-nowrap">{r.regiao}</span>
+                          <Badge tier={prioridade.tier} texto={prioridade.texto} />
+                        </div>
+                        <div className="mt-2 space-y-1.5">
+                          <div className="flex items-center gap-3">
+                            <span className="w-20 shrink-0 text-[10px] uppercase tracking-wide text-[#74C69D]">Densidade</span>
+                            <div className="h-2 flex-1 rounded bg-[#081C15]">
+                              <div className="h-2 rounded bg-[#74C69D]" style={{ width: `${r.densNorm * 100}%` }} />
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="w-20 shrink-0 text-[10px] uppercase tracking-wide text-[#74C69D]">Incidentes</span>
-                              <div className="h-2 flex-1 rounded bg-[#081C15]">
-                                <div className="h-2 rounded bg-[#52B788]" style={{ width: `${r.totalNorm * 100}%` }} />
-                              </div>
-                              <span className="w-28 shrink-0 text-right text-[11px] text-[#95D5B2] whitespace-nowrap">
-                                {r.total.toLocaleString("pt-BR")}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Padrões e prevenção */}
-              <div className="mt-10 border-t border-[#2D6A4F]/30 pt-6">
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-[#95D5B2]">
-                  Padrões e prevenção
-                </h2>
-
-                {/* Pico de atividade por horário */}
-                <div className="mt-4">
-                  <p className="text-sm text-[#B7E4C7]">
-                    Pico de atividade por horário{" "}
-                    <span className="text-xs text-[#74C69D]">· maior volume: {picoPrincipal.label}</span>
-                  </p>
-                  <div className="mt-3 flex h-32 items-end gap-2 rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4">
-                    {picoHorario.map((p) => (
-                      <div key={p.label} className="flex flex-1 flex-col items-center gap-1">
-                        <span className="text-[11px] text-[#95D5B2] whitespace-nowrap">{p.total}</span>
-                        <div
-                          className={`w-full rounded-t ${p.label === picoPrincipal.label ? "bg-[#52B788]" : "bg-[#2D6A4F]"}`}
-                          style={{ height: `${Math.max(4, (p.total / maxPico) * 80)}px` }}
-                        />
-                        <span className="text-center text-[9px] uppercase leading-tight tracking-wide text-[#74C69D] whitespace-nowrap">
-                          {p.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Locais com mais problemas */}
-                <div className="mt-6">
-                  <p className="text-sm text-[#B7E4C7]">Locais com mais problemas</p>
-                  <div className="mt-3 space-y-2">
-                    {locaisTop.map((l) => (
-                      <div key={l.chave} className="flex items-center gap-4">
-                        <span className="w-36 shrink-0 text-sm text-[#D8F3DC] whitespace-nowrap">{l.chave}</span>
-                        <div className="h-4 flex-1 rounded bg-[#081C15]">
-                          <div className="h-4 rounded bg-[#52B788]" style={{ width: `${(l.total / maxLocal) * 100}%` }} />
-                        </div>
-                        <span className="w-12 shrink-0 text-right text-sm text-[#95D5B2] whitespace-nowrap">
-                          {l.total.toLocaleString("pt-BR")}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Reincidência por zona */}
-                <div className="mt-6">
-                  <p className="text-sm text-[#B7E4C7]">
-                    Reincidência por zona{" "}
-                    <span className="text-xs text-[#74C69D]">(análise de volume e constância do tráfego)</span>
-                  </p>
-                  <div className="mt-3 space-y-2">
-                    {reincidenciaZonas.map((z) => {
-                      const frequencia = z.total / Math.max(1, z.diasUnicos);
-                      const tag = statusReincidencia(frequencia);
-                      return (
-                        <div key={z.regiao} className="flex items-center justify-between rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-3">
-                          <div className="flex items-center gap-4">
-                            <span className="w-36 text-sm font-medium text-[#D8F3DC] whitespace-nowrap">{z.regiao}</span>
-                            <p className="text-[11px] text-[#95D5B2] whitespace-nowrap">
-                              {z.total.toLocaleString("pt-BR")} registros ({frequencia.toFixed(1)}/dia)
-                            </p>
-                          </div>
-                          <Badge tier={tag.tier} texto={tag.texto} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Problemas por modo */}
-                <div className="mt-6">
-                  <p className="text-sm text-[#B7E4C7]">Problemas por modo</p>
-                  <div className="mt-3 space-y-2">
-                    {porModo.map((m) => (
-                      <div key={m.modo} className="flex items-center gap-4">
-                        <span className={`w-36 shrink-0 text-sm whitespace-nowrap ${MODO_TEXTO[m.modo]}`}>
-                          {MODO_LABEL[m.modo]}
-                        </span>
-                        <div className="h-4 flex-1 rounded bg-[#081C15]">
-                          <div className={`h-4 rounded ${MODO_COR[m.modo]}`} style={{ width: `${(m.total / maxModo) * 100}%` }} />
-                        </div>
-                        <span className="w-12 shrink-0 text-right text-sm text-[#95D5B2] whitespace-nowrap">
-                          {m.total.toLocaleString("pt-BR")}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Espécie mais recorrente em conflito */}
-                <div className="mt-6">
-                  <p className="text-sm text-[#B7E4C7]">Espécie mais recorrente em conflito</p>
-                  <div className="mt-3 space-y-2 pb-10">
-                    {especiesTop.map((e) => {
-                      const especieModo = ESPECIE_MODO[e.chave];
-                      return (
-                        <div key={e.chave} className="flex items-center gap-4">
-                          <span className="w-48 shrink-0 text-sm text-[#D8F3DC] flex justify-between whitespace-nowrap pr-2">
-                            {e.chave}
-                            <span className={`text-[9px] uppercase tracking-wide ${MODO_TEXTO[especieModo]}`}>
-                              {MODO_LABEL[especieModo]}
+                            <span className="w-28 shrink-0 text-right text-[11px] text-[#95D5B2] whitespace-nowrap">
+                              {formatarDensidade(r.densidade)}
                             </span>
-                          </span>
-                          <div className="h-4 flex-1 rounded bg-[#081C15]">
-                            <div className={`h-4 rounded ${MODO_COR[especieModo]}`} style={{ width: `${(e.total / maxEspecie) * 100}%` }} />
                           </div>
-                          <span className="w-12 shrink-0 text-right text-sm text-[#95D5B2] whitespace-nowrap">
-                            {e.total.toLocaleString("pt-BR")}
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="w-20 shrink-0 text-[10px] uppercase tracking-wide text-[#74C69D]">Incidentes</span>
+                            <div className="h-2 flex-1 rounded bg-[#081C15]">
+                              <div className="h-2 rounded bg-[#52B788]" style={{ width: `${r.totalNorm * 100}%` }} />
+                            </div>
+                            <span className="w-28 shrink-0 text-right text-[11px] text-[#95D5B2] whitespace-nowrap">
+                              {r.total.toLocaleString("pt-BR")}
+                            </span>
+                          </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </>
-          )}
-        </main>
-      </div>
+            </div>
+
+            {/* Padrões e prevenção */}
+            <div className="mt-10 border-t border-[#2D6A4F]/30 pt-6">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-[#95D5B2]">
+                Padrões e prevenção
+              </h2>
+
+              {/* Pico de atividade por horário */}
+              <div className="mt-4">
+                <p className="text-sm text-[#B7E4C7]">
+                  Pico de atividade por horário{" "}
+                  <span className="text-xs text-[#74C69D]">· maior volume: {picoPrincipal.label}</span>
+                </p>
+                {/* Aqui alteramos de h-32 para h-40 para evitar overflow */}
+                <div className="mt-3 flex h-40 items-end gap-2 rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-4">
+                  {picoHorario.map((p) => (
+                    <div key={p.label} className="flex flex-1 flex-col items-center gap-1">
+                      <span className="text-[11px] text-[#95D5B2] whitespace-nowrap">{p.total}</span>
+                      <div
+                        className={`w-full rounded-t ${p.label === picoPrincipal.label ? "bg-[#52B788]" : "bg-[#2D6A4F]"}`}
+                        style={{ height: `${Math.max(4, (p.total / maxPico) * 80)}px` }}
+                      />
+                      <span className="text-center text-[9px] uppercase leading-tight tracking-wide text-[#74C69D] whitespace-nowrap">
+                        {p.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Locais com mais problemas */}
+              <div className="mt-6">
+                <p className="text-sm text-[#B7E4C7]">Locais com mais problemas</p>
+                <div className="mt-3 space-y-2">
+                  {locaisTop.map((l) => (
+                    <div key={l.chave} className="flex items-center gap-4">
+                      <span className="w-36 shrink-0 text-sm text-[#D8F3DC] whitespace-nowrap">{l.chave}</span>
+                      <div className="h-4 flex-1 rounded bg-[#081C15]">
+                        <div className="h-4 rounded bg-[#52B788]" style={{ width: `${(l.total / maxLocal) * 100}%` }} />
+                      </div>
+                      <span className="w-12 shrink-0 text-right text-sm text-[#95D5B2] whitespace-nowrap">
+                        {l.total.toLocaleString("pt-BR")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reincidência por zona */}
+              <div className="mt-6">
+                <p className="text-sm text-[#B7E4C7]">
+                  Reincidência por zona{" "}
+                  <span className="text-xs text-[#74C69D]">(análise de volume e constância do tráfego)</span>
+                </p>
+                <div className="mt-3 space-y-2">
+                  {reincidenciaZonas.map((z) => {
+                    const frequencia = z.total / Math.max(1, z.diasUnicos);
+                    const tag = statusReincidencia(frequencia);
+                    return (
+                      <div key={z.regiao} className="flex items-center justify-between rounded-lg border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-3">
+                        <div className="flex items-center gap-4">
+                          <span className="w-36 text-sm font-medium text-[#D8F3DC] whitespace-nowrap">{z.regiao}</span>
+                          <p className="text-[11px] text-[#95D5B2] whitespace-nowrap">
+                            {z.total.toLocaleString("pt-BR")} registros ({frequencia.toFixed(1)}/dia)
+                          </p>
+                        </div>
+                        <Badge tier={tag.tier} texto={tag.texto} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Problemas por modo */}
+              <div className="mt-6">
+                <p className="text-sm text-[#B7E4C7]">Problemas por modo</p>
+                <div className="mt-3 space-y-2">
+                  {porModo.map((m) => (
+                    <div key={m.modo} className="flex items-center gap-4">
+                      <span className={`w-36 shrink-0 text-sm whitespace-nowrap ${MODO_TEXTO[m.modo]}`}>
+                        {MODO_LABEL[m.modo]}
+                      </span>
+                      <div className="h-4 flex-1 rounded bg-[#081C15]">
+                        <div className={`h-4 rounded ${MODO_COR[m.modo]}`} style={{ width: `${(m.total / maxModo) * 100}%` }} />
+                      </div>
+                      <span className="w-12 shrink-0 text-right text-sm text-[#95D5B2] whitespace-nowrap">
+                        {m.total.toLocaleString("pt-BR")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Espécie mais recorrente em conflito */}
+              <div className="mt-6">
+                <p className="text-sm text-[#B7E4C7]">Espécie mais recorrente em conflito</p>
+                <div className="mt-3 space-y-2 pb-10">
+                  {especiesTop.map((e) => {
+                    const especieModo = ESPECIE_MODO[e.chave];
+                    return (
+                      <div key={e.chave} className="flex items-center gap-4">
+                        <span className="w-48 shrink-0 text-sm text-[#D8F3DC] flex justify-between whitespace-nowrap pr-2">
+                          {e.chave}
+                          <span className={`text-[9px] uppercase tracking-wide ${MODO_TEXTO[especieModo]}`}>
+                            {MODO_LABEL[especieModo]}
+                          </span>
+                        </span>
+                        <div className="h-4 flex-1 rounded bg-[#081C15]">
+                          <div className={`h-4 rounded ${MODO_COR[especieModo]}`} style={{ width: `${(e.total / maxEspecie) * 100}%` }} />
+                        </div>
+                        <span className="w-12 shrink-0 text-right text-sm text-[#95D5B2] whitespace-nowrap">
+                          {e.total.toLocaleString("pt-BR")}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </main>
     </div>
   );
 }
