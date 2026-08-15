@@ -1,7 +1,6 @@
 import {
   Plane,
   CarFront,
-  Waves,
   Activity,
 } from "lucide-react";
 
@@ -23,12 +22,6 @@ const servicos = [
     icon: CarFront,
     path: "/",
   },
-  {
-    label: "SUBMARINO",
-    description: "Controle de Tráfego Submarino",
-    icon: Waves,
-    path: "/submarino",
-  },
 ];
 
 export default function Cabecalho() {
@@ -36,7 +29,7 @@ export default function Cabecalho() {
 
   return (
     <header className="relative border-b border-[#2D6A4F]/40 bg-[#081C15]/95 backdrop-blur-xl">
-      
+
       {/* Brilho ambiente */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-32 w-96 -translate-x-1/2 rounded-full bg-[#52B788]/10 blur-3xl" />
