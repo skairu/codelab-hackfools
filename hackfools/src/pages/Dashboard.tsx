@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { Header } from "../components/Header"; // ajuste o caminho para o seu Header real
+import { useMemo, useState } from "react";// ajuste o caminho para o seu Header real
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -158,8 +157,6 @@ export default function DashboardStats() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="text-xl font-medium text-gray-900">Estatísticas</h1>
         <p className="mt-1 text-sm text-gray-500">
