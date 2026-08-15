@@ -659,32 +659,32 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
 
       {/* Rota Info Overlay */}
       {mode === "route" && onNodeSelect && (
-        <div className="absolute left-4 bottom-4 z-30 max-w-xs border border-[#40E0D0]/50 bg-[#07120F]/90 p-3 font-mono text-[10px]">
-          <div className="mb-2 text-[9px] uppercase tracking-wide text-[#40E0D0]">
+        <div className="absolute left-4 bottom-4 z-30 max-w-xs border border-[#40E0D0]/50 bg-[#07120F]/90 p-3 font-mono text-[11px]">
+          <div className="mb-2 text-[11px] uppercase tracking-wide text-[#40E0D0]">
             Modo de Roteamento
           </div>
           {!selectedNodes ? (
             <div className="text-[#B7E4C7]/70">
               <div>▶ Clique no primeiro nó (origem)</div>
-              <div className="mt-1 text-[9px] text-[#74C69D]/60">em verde</div>
+              <div className="mt-1 text-[10px] text-[#74C69D]/60">em verde</div>
             </div>
           ) : selectedCount === 1 ? (
             <div className="text-[#B7E4C7]/70">
               <div>▶ Clique no segundo nó (destino)</div>
-              <div className="mt-1 text-[9px] text-[#74C69D]/60">em vermelho</div>
-              <div className="mt-2 text-[9px]">
+              <div className="mt-1 text-[10px] text-[#74C69D]/60">em vermelho</div>
+              <div className="mt-2 text-[10px]">
                 Origem: <span className="text-[#52B788]">{selectedNodes[0]}</span>
               </div>
             </div>
           ) : (
             <div className="text-[#40E0D0]">
               <div>✓ Rota calculada!</div>
-              <div className="mt-2 text-[9px]">
+              <div className="mt-2 text-[10px]">
                 <div>Origem: <span className="text-[#52B788]">{selectedNodes[0]}</span></div>
                 <div>Destino: <span className="text-red-400">{selectedNodes[1]}</span></div>
               </div>
               {route && (
-                <div className="mt-2 text-[9px] text-[#95D5B2]">
+                <div className="mt-2 text-[10px] text-[#95D5B2]">
                   <div>Distância: {(route.distance_m / 1000).toFixed(2)} km</div>
                   <div>Tempo: {Math.round(route.duration_s)} s</div>
                 </div>
@@ -695,42 +695,42 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
       )}
 
       {mode === "interdict" && onEdgeToggle && (
-        <div className="absolute left-4 bottom-4 z-30 max-w-xs border border-red-500/50 bg-[#07120F]/90 p-3 font-mono text-[10px]">
-          <div className="mb-2 text-[9px] uppercase tracking-wide text-red-300">
+        <div className="absolute left-4 bottom-4 z-30 max-w-xs border border-red-500/50 bg-[#07120F]/90 p-3 font-mono text-[11px]">
+          <div className="mb-2 text-[11px] uppercase tracking-wide text-red-300">
             Modo de Interdição
           </div>
           <div className="text-[#B7E4C7]/70">
             <div>▶ Clique em qualquer rua para bloquear ou liberar.</div>
-            <div className="mt-1 text-[9px] text-[#74C69D]/60">Total ativo: {blockedRoads.length}</div>
+            <div className="mt-1 text-[10px] text-[#74C69D]/60">Total ativo: {blockedRoads.length}</div>
           </div>
         </div>
       )}
 
       {/* Status dos dinossauros */}
-      <div className="absolute bottom-4 right-4 z-30 space-y-1 border border-[#2D6A4F]/50 bg-[#07120F]/90 p-3 font-mono text-[10px]">
-        <div className="mb-2 text-[#74C69D]">STATUS DINOSSAUROS</div>
+      <div className="absolute bottom-4 right-4 z-30 space-y-1 border border-[#2D6A4F]/50 bg-[#07120F]/90 p-3 font-mono text-[11px]">
+        <div className="mb-2 text-[#74C69D] text-[11px]">STATUS DINOSSAUROS</div>
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-[#52B788]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#52B788]" />
           <span>CALMOS: {dinosaurs.filter((d) => d.status === "calm").length}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-yellow-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
           <span>ESTRESSADOS: {dinosaurs.filter((d) => d.status === "stressed").length}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-red-500" />
+          <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
           <span>AGRESSIVOS: {dinosaurs.filter((d) => d.status === "aggressive").length}</span>
         </div>
       </div>
 
       {/* Lista de dinossauros (sidebar) */}
-      <div className="absolute right-4 top-20 z-30 max-h-[600px] overflow-y-auto border border-[#2D6A4F]/50 bg-[#07120F]/90 p-3 font-mono text-[9px]">
-        <div className="mb-3 text-[#74C69D]">DINOSSAUROS RASTREADOS</div>
+      <div className="absolute right-4 top-20 z-30 max-h-[600px] overflow-y-auto border border-[#2D6A4F]/50 bg-[#07120F]/90 p-3 font-mono text-[10px]">
+        <div className="mb-3 text-[#74C69D] text-[16px]">DINOSSAUROS RASTREADOS</div>
         <div className="space-y-2">
           {dinosaurs.map((dino) => (
-            <div key={dino.id} className="border-l-2 border-[#52B788]/30 pl-2 text-[#B7E4C7]/70">
-              <div className="truncate font-mono text-[8px]">#{dino.id} - {dino.specie}</div>
-              <div className="text-[8px]">
+            <div key={dino.id} className="border-l-2 border-[#52B788]/30 pl-2 text-[#B7E4C7]/70 ">
+              <div className="truncate font-mono text-[12px]">#{dino.id} - {dino.specie}</div>
+              <div className="text-[12px]">
                 <span className={
                   dino.status === "calm" ? "text-[#52B788]" :
                   dino.status === "stressed" ? "text-yellow-400" :
@@ -739,7 +739,7 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
                   {dino.status.toUpperCase()}
                 </span>
               </div>
-              <div className="text-[8px] text-[#74C69D]/60">
+              <div className="text-[10px] text-[#74C69D]/60">
                 Fome: {Math.round(dino.hunger)}% | Stress: {Math.round(dino.stress)}%
               </div>
             </div>
