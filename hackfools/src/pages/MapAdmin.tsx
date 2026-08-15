@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { Map as MapIcon, TriangleAlert, Users } from "lucide-react";
+import AdminSubheader, { type AdminTab } from "../components/AdminSubheader";
+import Dashboard from "./Dashboard";
  
 // ---------------------------------------------------------------------------
 // Tipos
@@ -132,6 +134,7 @@ const EQUIPES_ALOCADAS_INICIALMENTE = PROBLEMAS_INICIAIS.filter(
 // ---------------------------------------------------------------------------
  
 export default function ControlPanel() {
+  const [activeTab, setActiveTab] = useState<AdminTab>("radar");
   const [filtro, setFiltro] = useState<FiltroSeveridade>("todos");
   const [problemas, setProblemas] = useState<Problema[]>(PROBLEMAS_INICIAIS);
   const [equipesDisponiveis, setEquipesDisponiveis] = useState(
@@ -162,144 +165,156 @@ export default function ControlPanel() {
  
   return (
     <div className="min-h-screen bg-black">
+      <AdminSubheader activeTab={activeTab} onTabChange={setActiveTab} />
+      
       <main className="mx-auto max-w-7xl px-4 py-6">
-        {/* Filtros por severidade */}
-        <div className="flex flex-wrap gap-2">
-          {FILTROS.map((f) => {
-            const ativo = f === filtro;
-            return (
-              <button
-                key={f}
-                onClick={() => setFiltro(f)}
-                className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
-                  ativo
-                    ? "border border-blue-500 text-blue-400"
-                    : "border border-transparent text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                {FILTRO_LABEL[f]}
-              </button>
-            );
-          })}
-        </div>
- 
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_380px]">
-          {/* Coluna do mapa */}
-          <div className="flex flex-col gap-4">
-            {/* Mapa geral — placeholder por enquanto */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-              <div className="flex items-center gap-2">
-                <MapIcon className="h-4 w-4 text-zinc-400" strokeWidth={1.75} />
-                <h2 className="text-base font-medium text-zinc-200">Mapa geral</h2>
-              </div>
- 
-              {/* A grade de ruas (interdição por linha, não por quadra) entra
-                  aqui quando o mapa for configurado. */}
-              <div className="mt-4 flex min-h-[420px] flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-zinc-700">
-                <p className="text-sm text-zinc-500">
-                  {problemas.length} focos ativos
-                </p>
-                <p className="text-xs text-zinc-600">mapa em configuração</p>
-              </div>
-            </div>
- 
-            {/* Equipes disponíveis */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-zinc-400" strokeWidth={1.75} />
-                <h2 className="text-base font-medium text-zinc-200">Equipes de contenção</h2>
-              </div>
- 
-              <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-medium text-white">{equipesDisponiveis}</span>
-                <span className="text-sm text-zinc-500">/ {TOTAL_EQUIPES} disponíveis</span>
-              </div>
- 
-              <div className="mt-4 flex gap-1.5">
-                {Array.from({ length: TOTAL_EQUIPES }).map((_, i) => (
-                  <span
-                    key={i}
-                    className={`h-2.5 flex-1 rounded-full ${
-                      i < equipesDisponiveis ? "bg-blue-500" : "bg-zinc-800"
+        {/* Aba: Map Radar */}
+        {activeTab === "radar" && (
+          <>
+            {/* Filtros por severidade */}
+            <div className="flex flex-wrap gap-2">
+              {FILTROS.map((f) => {
+                const ativo = f === filtro;
+                return (
+                  <button
+                    key={f}
+                    onClick={() => setFiltro(f)}
+                    className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
+                      ativo
+                        ? "border border-blue-500 text-blue-400"
+                        : "border border-transparent text-zinc-500 hover:text-zinc-300"
                     }`}
-                  />
-                ))}
+                  >
+                    {FILTRO_LABEL[f]}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_380px]">
+              {/* Coluna do mapa */}
+              <div className="flex flex-col gap-4">
+                {/* Mapa geral — placeholder por enquanto */}
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+                  <div className="flex items-center gap-2">
+                    <MapIcon className="h-4 w-4 text-zinc-400" strokeWidth={1.75} />
+                    <h2 className="text-base font-medium text-zinc-200">Mapa geral</h2>
+                  </div>
+
+                  {/* A grade de ruas (interdição por linha, não por quadra) entra
+                      aqui quando o mapa for configurado. */}
+                  <div className="mt-4 flex min-h-[420px] flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-zinc-700">
+                    <p className="text-sm text-zinc-500">
+                      {problemas.length} focos ativos
+                    </p>
+                    <p className="text-xs text-zinc-600">mapa em configuração</p>
+                  </div>
+                </div>
+
+                {/* Equipes disponíveis */}
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-zinc-400" strokeWidth={1.75} />
+                    <h2 className="text-base font-medium text-zinc-200">Equipes de contenção</h2>
+                  </div>
+
+                  <div className="mt-3 flex items-baseline gap-2">
+                    <span className="text-3xl font-medium text-white">{equipesDisponiveis}</span>
+                    <span className="text-sm text-zinc-500">/ {TOTAL_EQUIPES} disponíveis</span>
+                  </div>
+
+                  <div className="mt-4 flex gap-1.5">
+                    {Array.from({ length: TOTAL_EQUIPES }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`h-2.5 flex-1 rounded-full ${
+                          i < equipesDisponiveis ? "bg-blue-500" : "bg-zinc-800"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Problemas ativos */}
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+                <div className="flex items-center gap-2">
+                  <TriangleAlert className="h-4 w-4 text-zinc-400" strokeWidth={1.75} />
+                  <h2 className="text-base font-medium text-zinc-200">Problemas ativos</h2>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {problemasFiltrados.length === 0 ? (
+                    <p className="py-10 text-center text-sm text-zinc-600">
+                      Nenhum foco ativo nessa severidade.
+                    </p>
+                  ) : (
+                    problemasFiltrados.map((p) => (
+                      <div
+                        key={p.id}
+                        className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="text-[15px] font-medium text-white">{p.titulo}</span>
+                          <span
+                            className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${SEVERIDADE_BADGE[p.severidade]}`}
+                          >
+                            {SEVERIDADE_LABEL[p.severidade]}
+                          </span>
+                        </div>
+
+                        {p.estado === "resolvido" && (
+                          <p className="mt-3 text-sm text-zinc-600">Resolvido — sem risco</p>
+                        )}
+
+                        {p.estado === "a_caminho" && (
+                          <div className="mt-3 flex items-center justify-between gap-3">
+                            <p className="text-sm text-zinc-400">
+                              {p.equipe} a caminho — ETA {p.etaMin}min
+                            </p>
+                            <button
+                              onClick={() => handleDesalocar(p.id)}
+                              className="shrink-0 rounded-lg border border-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800"
+                            >
+                              Desalocar
+                            </button>
+                          </div>
+                        )}
+
+                        {p.estado === "sem_equipe" && (
+                          <>
+                            <p className="mt-3 text-sm text-zinc-500">Sem equipe alocada</p>
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                              <span className="text-sm font-medium text-zinc-200">
+                                {p.equipe} — ETA {p.etaMin}min
+                              </span>
+                              <button
+                                onClick={() => handleAlocar(p.id)}
+                                disabled={equipesDisponiveis <= 0}
+                                className={`shrink-0 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                                  equipesDisponiveis <= 0
+                                    ? "cursor-not-allowed border-zinc-800 bg-zinc-900 text-zinc-600"
+                                    : "border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
+                                }`}
+                              >
+                                {equipesDisponiveis <= 0 ? "Sem equipes" : "Alocar"}
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-          </div>
- 
-          {/* Problemas ativos */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-            <div className="flex items-center gap-2">
-              <TriangleAlert className="h-4 w-4 text-zinc-400" strokeWidth={1.75} />
-              <h2 className="text-base font-medium text-zinc-200">Problemas ativos</h2>
-            </div>
- 
-            <div className="mt-4 space-y-3">
-              {problemasFiltrados.length === 0 ? (
-                <p className="py-10 text-center text-sm text-zinc-600">
-                  Nenhum foco ativo nessa severidade.
-                </p>
-              ) : (
-                problemasFiltrados.map((p) => (
-                  <div
-                    key={p.id}
-                    className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="text-[15px] font-medium text-white">{p.titulo}</span>
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${SEVERIDADE_BADGE[p.severidade]}`}
-                      >
-                        {SEVERIDADE_LABEL[p.severidade]}
-                      </span>
-                    </div>
- 
-                    {p.estado === "resolvido" && (
-                      <p className="mt-3 text-sm text-zinc-600">Resolvido — sem risco</p>
-                    )}
- 
-                    {p.estado === "a_caminho" && (
-                      <div className="mt-3 flex items-center justify-between gap-3">
-                        <p className="text-sm text-zinc-400">
-                          {p.equipe} a caminho — ETA {p.etaMin}min
-                        </p>
-                        <button
-                          onClick={() => handleDesalocar(p.id)}
-                          className="shrink-0 rounded-lg border border-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800"
-                        >
-                          Desalocar
-                        </button>
-                      </div>
-                    )}
- 
-                    {p.estado === "sem_equipe" && (
-                      <>
-                        <p className="mt-3 text-sm text-zinc-500">Sem equipe alocada</p>
-                        <div className="mt-2 flex items-center justify-between gap-3">
-                          <span className="text-sm font-medium text-zinc-200">
-                            {p.equipe} — ETA {p.etaMin}min
-                          </span>
-                          <button
-                            onClick={() => handleAlocar(p.id)}
-                            disabled={equipesDisponiveis <= 0}
-                            className={`shrink-0 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                              equipesDisponiveis <= 0
-                                ? "cursor-not-allowed border-zinc-800 bg-zinc-900 text-zinc-600"
-                                : "border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
-                            }`}
-                          >
-                            {equipesDisponiveis <= 0 ? "Sem equipes" : "Alocar"}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+          </>
+        )}
+
+        {/* Aba: Estatísticas */}
+        {activeTab === "stats" && (
+          <Dashboard />
+        )}
       </main>
     </div>
   );
