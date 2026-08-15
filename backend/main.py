@@ -32,8 +32,8 @@ import random
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from config import NUM_DINOS
 from database import Base, SessionLocal, engine, get_db
@@ -90,11 +90,11 @@ app = FastAPI(title="Dino Traffic Control - Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # em produção, restrinja à origem real do frontend
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/")
 def read_root():
