@@ -121,31 +121,6 @@ export default function Header() {
             );
           })}
         </nav>
-
-        {/* System status */}
-        <div className="hidden items-center gap-2 sm:flex">
-          <span className="relative flex h-2 w-2">
-            <span
-              className="
-                absolute inline-flex h-full w-full
-                animate-ping rounded-full
-                bg-[#74C69D] opacity-40
-              "
-            />
-
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#52B788]" />
-          </span>
-
-          <span
-            className="
-              font-mono text-[10px] uppercase
-              tracking-[0.2em]
-              text-[#74C69D]
-            "
-          >
-            System Online
-          </span>
-        </div>
       </div>
     </header>
   );
