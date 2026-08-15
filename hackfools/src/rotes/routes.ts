@@ -7,4 +7,5 @@ export const routePaths = {
   terrestre: "/",
   aereo: "/aereo",
   dashboard: "/dashboard",
+  mapadmin: "/mapadmin",
 } as const;
