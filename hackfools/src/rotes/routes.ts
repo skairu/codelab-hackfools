@@ -1,8 +1,11 @@
 // Rotas da aplicação
-// As rotas estão definidas em App.tsx usando o hook useRoutes do react-router-dom
-// Este arquivo pode ser usado como referência para a estrutura de rotas
+// Os caminhos ficam centralizados neste arquivo para evitar
+// repetir strings como "/dashboard", "/aereo", etc.
 
 export const routePaths = {
   home: "/",
+  terrestre: "/",
+  aereo: "/aereo",
+  submarino: "/submarino",
   dashboard: "/dashboard",
 } as const;

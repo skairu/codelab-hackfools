@@ -1,12 +1,21 @@
-import { Plane, CarFront, Waves, Activity } from "lucide-react";
-import { Link } from "react-router-dom";
+import {
+  Plane,
+  CarFront,
+  Waves,
+  Activity,
+} from "lucide-react";
+
+import {
+  Link,
+  useLocation,
+} from "react-router-dom";
 
 const servicos = [
   {
     label: "AÉREO",
     description: "Controle de Tráfego Aéreo",
     icon: Plane,
-    path: "/",
+    path: "/aereo",
   },
   {
     label: "TERRESTRE",
@@ -15,16 +24,19 @@ const servicos = [
     path: "/",
   },
   {
-    label: "MARÍTIMO",
-    description: "Controle de Tráfego Marítimo",
+    label: "SUBMARINO",
+    description: "Controle de Tráfego Submarino",
     icon: Waves,
-    path: "/",
+    path: "/submarino",
   },
 ];
 
 export default function Cabecalho() {
+  const location = useLocation();
+
   return (
     <header className="relative border-b border-[#2D6A4F]/40 bg-[#081C15]/95 backdrop-blur-xl">
+      
       {/* Brilho ambiente */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-32 w-96 -translate-x-1/2 rounded-full bg-[#52B788]/10 blur-3xl" />
@@ -35,7 +47,10 @@ export default function Cabecalho() {
       <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3">
+        <Link
+          to="/"
+          className="flex items-center gap-3"
+        >
           <div
             className="
               relative flex h-10 w-10 items-center justify-center
@@ -81,8 +96,11 @@ export default function Cabecalho() {
 
         {/* Navegação */}
         <nav className="hidden items-center gap-2 md:flex">
-          {servicos.map((servico, index) => {
+          {servicos.map((servico) => {
             const Icone = servico.icon;
+
+            const ativo =
+              location.pathname === servico.path;
 
             return (
               <Link
@@ -97,8 +115,9 @@ export default function Cabecalho() {
                   hover:bg-[#2D6A4F]/20
                 "
               >
+
                 {/* Indicador ativo */}
-                {index === 0 && (
+                {ativo && (
                   <span
                     className="
                       absolute bottom-0 left-1/2
