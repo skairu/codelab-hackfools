@@ -5,7 +5,6 @@ import Header from "./components/Header";
 import Terrestre from "./pages/Terrestre";
 import Dashboard from "./pages/Dashboard";
 import Aereo from "./pages/Aereo";
-import Submarino from "./pages/Submarino";
 
 import { routePaths } from "./rotes/routes.ts";
 
@@ -21,10 +20,6 @@ const routes = [
   {
     path: routePaths.aereo,
     element: <Aereo />,
-  },
-  {
-    path: routePaths.submarino,
-    element: <Submarino />,
   },
 ];
 

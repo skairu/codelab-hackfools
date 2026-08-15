@@ -6,6 +6,5 @@ export const routePaths = {
   home: "/",
   terrestre: "/",
   aereo: "/aereo",
-  submarino: "/submarino",
   dashboard: "/dashboard",
 } as const;
