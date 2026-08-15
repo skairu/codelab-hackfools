@@ -11,7 +11,12 @@ export interface Dinosaur {
   speed: number;
   hunger: number;
   stress: number;
+  current_node?: string | null;
+  next_node?: string | null;
+  edge_progress?: number | null;
 }
+
+export type BlockedEdge = [string, string];
 
 export interface GraphNode {
   id: string;

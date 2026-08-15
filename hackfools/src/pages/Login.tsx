@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LogIn, User as UserIcon } from "lucide-react";
 import { routePaths } from "../rotes/routes";
@@ -20,11 +20,6 @@ const USUARIOS_MOCK: Usuario[] = [
   { nome: "user", senha: "123", papel: "user" },
   { nome: "admin", senha: "456", papel: "admin" },
 ];
-
-const PAPEL_LABEL: Record<Papel, string> = {
-  user: "Usuário",
-  admin: "Administrador",
-};
 
 // ---------------------------------------------------------------------------
 // Componente

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import type { CityGraph, Dinosaur, GraphNode, RouteData } from "../types/dinosaur";
+import type { BlockedEdge, CityGraph, Dinosaur, RouteData } from "../types/dinosaur";
 
 interface MapBounds {
   minLat: number;
@@ -15,6 +15,10 @@ interface PixelCoords {
   y: number;
 }
 
+type SelectedNodes = [string] | [string, string] | null;
+
+type MapMode = "route" | "interdict";
+
 interface TerrestrialMapProps {
   graph: CityGraph | null;
   dinosaurs: Dinosaur[];
@@ -22,8 +26,11 @@ interface TerrestrialMapProps {
   error: string | null;
   wsConnected: boolean;
   route?: RouteData | null;
-  selectedNodes?: [string, string] | null;
+  selectedNodes?: SelectedNodes;
+  interdictedEdges?: BlockedEdge[];
+  mode?: MapMode;
   onNodeSelect?: (nodeId: string) => void;
+  onEdgeToggle?: (nodeA: string, nodeB: string) => void;
 }
 
 /**
@@ -105,6 +112,15 @@ function getSpeciesIcon(specie: string): string {
   return "🦖";
 }
 
+function normalizeEdge(a: string, b: string): [string, string] {
+  return [a, b].sort() as [string, string];
+}
+
+function getEdgeKey(a: string, b: string): string {
+  const [first, second] = normalizeEdge(a, b);
+  return `${first}|${second}`;
+}
+
 export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
   graph,
   dinosaurs,
@@ -113,9 +129,13 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
   wsConnected,
   route,
   selectedNodes,
+  interdictedEdges = [],
+  mode = "route",
   onNodeSelect,
+  onEdgeToggle,
 }) => {
   const mapBounds = useMemo(() => calculateMapBounds(graph), [graph]);
+  const showGraphDebug = true;
 
   const svgDimensions = { width: 1200, height: 800 };
 
@@ -167,6 +187,79 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
     }));
   }, [dinosaurs, mapBounds]);
 
+  const trafficByEdge = useMemo(() => {
+    const counts: Record<string, number> = {};
+
+    dinosaurs.forEach((dino) => {
+      if (!dino.current_node || !dino.next_node || dino.current_node === dino.next_node) {
+        return;
+      }
+
+      const key = getEdgeKey(dino.current_node, dino.next_node);
+      counts[key] = (counts[key] ?? 0) + 1;
+    });
+
+    return counts;
+  }, [dinosaurs]);
+
+  const blockedSet = useMemo(() => {
+    return new Set(
+      interdictedEdges.map(([nodeA, nodeB]) => getEdgeKey(nodeA, nodeB))
+    );
+  }, [interdictedEdges]);
+
+  const blockedRoads = useMemo(
+    () => interdictedEdges.map(([nodeA, nodeB]) => `${nodeA} ↔ ${nodeB}`),
+    [interdictedEdges]
+  );
+
+  const mostLoadedRoads = useMemo(() => {
+    return [...edges]
+      .map((edge) => ({
+        label: `${edge.source} ↔ ${edge.target}`,
+        load: trafficByEdge[getEdgeKey(edge.source, edge.target)] ?? 0,
+      }))
+      .filter((item) => item.load > 0)
+      .sort((a, b) => b.load - a.load)
+      .slice(0, 4);
+  }, [edges, trafficByEdge]);
+
+  const simulatedRoutes = useMemo(() => {
+    if (!graph || !mapBounds) return [];
+
+    return dinosaurs
+      .filter((dino) => dino.current_node && dino.next_node)
+      .map((dino) => {
+        const source = graph.nodes[dino.current_node!];
+        const target = graph.nodes[dino.next_node!];
+
+        if (!source || !target) return null;
+
+        const start = latLonToPixels(source.lat, source.lon, mapBounds, svgDimensions.width, svgDimensions.height);
+        const end = latLonToPixels(target.lat, target.lon, mapBounds, svgDimensions.width, svgDimensions.height);
+        const progress = dino.edge_progress ?? 0;
+        const currentX = start.x + (end.x - start.x) * progress;
+        const currentY = start.y + (end.y - start.y) * progress;
+
+        return {
+          id: dino.id,
+          status: dino.status,
+          start,
+          end,
+          current: { x: currentX, y: currentY },
+          width: 2 + (trafficByEdge[getEdgeKey(dino.current_node!, dino.next_node!)] ?? 0) * 1.5,
+        };
+      })
+      .filter(Boolean) as Array<{
+        id: number;
+        status: string;
+        start: PixelCoords;
+        end: PixelCoords;
+        current: PixelCoords;
+        width: number;
+      }>;
+  }, [dinosaurs, graph, mapBounds, trafficByEdge]);
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center bg-[#050B0E] text-[#B7E4C7]">
@@ -207,8 +300,63 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
     );
   }
 
+  const selectedCount = selectedNodes?.length ?? 0;
+
   return (
     <div className="relative h-full overflow-hidden bg-[#050B0E]">
+      {mode === "route" && (
+        <div className="absolute left-4 top-4 z-30 max-w-xs rounded-xl border border-[#2D6A4F]/50 bg-[#07120F]/90 p-3 font-mono text-[10px] text-[#B7E4C7]/80 shadow-[0_0_18px_rgba(82,183,136,0.12)]">
+          <div className="mb-2 text-[9px] uppercase tracking-[0.18em] text-[#74C69D]">
+            HUD de Tráfego
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#74C69D]/70">Vias interditadas</span>
+              <span className="text-[#EF4444] font-semibold">{blockedRoads.length}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#74C69D]/70">Vias críticas</span>
+              <span className="text-[#FBBF24] font-semibold">{mostLoadedRoads.length}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#74C69D]/70">Dinos ativos</span>
+              <span className="text-[#52B788] font-semibold">{dinosaurs.length}</span>
+            </div>
+          </div>
+
+          {blockedRoads.length > 0 && (
+            <div className="mt-3 border-t border-[#2D6A4F]/30 pt-2">
+              <div className="mb-1 text-[8px] uppercase tracking-[0.2em] text-[#74C69D]/60">
+                Interdições
+              </div>
+              <div className="space-y-1">
+                {blockedRoads.slice(0, 4).map((road) => (
+                  <div key={road} className="truncate text-red-300/90">
+                    {road}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {mostLoadedRoads.length > 0 && (
+            <div className="mt-3 border-t border-[#2D6A4F]/30 pt-2">
+              <div className="mb-1 text-[8px] uppercase tracking-[0.2em] text-[#74C69D]/60">
+                Rotas mais movimentadas
+              </div>
+              <div className="space-y-1">
+                {mostLoadedRoads.map((road) => (
+                  <div key={road.label} className="flex items-center justify-between gap-2 text-[#B7E4C7]/70">
+                    <span className="truncate">{road.label}</span>
+                    <span className="text-[#FBBF24]">{road.load}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {/* Grid de fundo */}
       <div
         className="
@@ -228,20 +376,109 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
         viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`}
         preserveAspectRatio="xMidYMid slice"
       >
+        {/* Rota simulada dos dinossauros */}
+        {simulatedRoutes.map((segment) => {
+          const color = getStatusColor(segment.status);
+
+          return (
+            <g key={`simulated-${segment.id}`}>
+              <line
+                x1={segment.start.x}
+                y1={segment.start.y}
+                x2={segment.end.x}
+                y2={segment.end.y}
+                stroke={color}
+                strokeWidth={segment.width}
+                opacity="0.45"
+                pointerEvents="none"
+                style={{ filter: `drop-shadow(0 0 6px ${color})` }}
+              />
+              <circle
+                cx={segment.current.x}
+                cy={segment.current.y}
+                r={4 + (segment.width / 2)}
+                fill={color}
+                opacity="0.9"
+                pointerEvents="none"
+                style={{ filter: `drop-shadow(0 0 7px ${color})` }}
+              />
+            </g>
+          );
+        })}
+
         {/* Arestas (ruas) */}
         <g>
-          {edges.map((edge, index) => (
-            <line
-              key={`edge-${index}`}
-              x1={edge.sourcePixel.x}
-              y1={edge.sourcePixel.y}
-              x2={edge.targetPixel.x}
-              y2={edge.targetPixel.y}
-              stroke="#1B4332"
-              strokeWidth="2"
-              opacity="0.6"
-            />
-          ))}
+          {edges.map((edge, index) => {
+            const edgeKey = getEdgeKey(edge.source, edge.target);
+            const isBlocked = blockedSet.has(edgeKey);
+            const traffic = trafficByEdge[edgeKey] ?? 0;
+
+            if (mode === "interdict") {
+              return (
+                <g
+                  key={`edge-${index}`}
+                  onClick={() => onEdgeToggle?.(edge.source, edge.target)}
+                  style={{ cursor: onEdgeToggle ? "pointer" : "default" }}
+                >
+                  <line
+                    x1={edge.sourcePixel.x}
+                    y1={edge.sourcePixel.y}
+                    x2={edge.targetPixel.x}
+                    y2={edge.targetPixel.y}
+                    stroke={isBlocked ? "#EF4444" : "#2D6A4F"}
+                    strokeWidth={isBlocked ? 7 : 5}
+                    strokeLinecap="round"
+                    opacity={isBlocked ? 1 : showGraphDebug ? 0.8 : 0.18}
+                    pointerEvents="stroke"
+                  />
+
+                  {isBlocked && (
+                    <line
+                      x1={edge.sourcePixel.x}
+                      y1={edge.sourcePixel.y}
+                      x2={edge.targetPixel.x}
+                      y2={edge.targetPixel.y}
+                      stroke="#FCA5A5"
+                      strokeWidth={2}
+                      strokeDasharray="9 8"
+                      strokeLinecap="round"
+                      opacity={1}
+                      pointerEvents="none"
+                    />
+                  )}
+                </g>
+              );
+            }
+
+            const strokeWidth = isBlocked ? 5 : Math.min(8, 2 + traffic * 1.8);
+            const stroke = isBlocked
+              ? "#EF4444"
+              : traffic > 0
+                ? traffic >= 3
+                  ? "#FBBF24"
+                  : "#60A5FA"
+                : "#1B4332";
+
+            return (
+              <g
+                key={`edge-${index}`}
+                onClick={() => onEdgeToggle?.(edge.source, edge.target)}
+                style={{ cursor: onEdgeToggle ? "pointer" : "default" }}
+              >
+                <line
+                  x1={edge.sourcePixel.x}
+                  y1={edge.sourcePixel.y}
+                  x2={edge.targetPixel.x}
+                  y2={edge.targetPixel.y}
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
+                  opacity={isBlocked ? 1 : traffic > 0 ? 0.9 : 0.65}
+                  strokeDasharray={isBlocked ? "8 6" : undefined}
+                  pointerEvents="stroke"
+                />
+              </g>
+            );
+          })}
         </g>
 
         {/* Rota calculada */}
@@ -275,6 +512,7 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
                   stroke="#40E0D0"
                   strokeWidth="3"
                   opacity="0.9"
+                  pointerEvents="none"
                   style={{ filter: "drop-shadow(0 0 8px #40E0D0)" }}
                 />
               );
@@ -301,6 +539,7 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
                   r={isStart || isEnd ? 6 : 3}
                   fill={isStart ? "#52B788" : isEnd ? "#EF4444" : "#40E0D0"}
                   opacity="0.9"
+                  pointerEvents="none"
                   style={{
                     filter: `drop-shadow(0 0 6px ${isStart ? "#52B788" : isEnd ? "#EF4444" : "#40E0D0"})`,
                   }}
@@ -369,6 +608,7 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
                   r="12"
                   fill={statusColor}
                   opacity="0.2"
+                  pointerEvents="none"
                 />
 
                 {/* Círculo de borda com glow */}
@@ -380,6 +620,7 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
                   stroke={statusColor}
                   strokeWidth="2"
                   opacity="0.8"
+                  pointerEvents="none"
                   style={{
                     filter: `drop-shadow(0 0 6px ${statusColor})`,
                   }}
@@ -393,6 +634,7 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
                   dominantBaseline="middle"
                   fontSize="12"
                   fontWeight="bold"
+                  pointerEvents="none"
                 >
                   {icon}
                 </text>
@@ -402,22 +644,23 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
         </g>
       </svg>
 
-      {/* Info overlay */}
-      <div className="absolute left-4 top-4 z-30 font-mono text-[9px] text-[#74C69D]/50">
-        <div>GRID: {graph.nodes ? Object.keys(graph.nodes).length : 0} nós</div>
-        <div>DINOS: {dinosaurs.length}</div>
-        <div className="mt-2">
-          STATUS:
-          <span className={wsConnected ? "text-[#52B788]" : "text-red-400"}>
-            {wsConnected ? " ● CONECTADO" : " ● DESCONECTADO"}
-          </span>
+      {mode === "route" && (
+        <div className="absolute left-4 top-[270px] z-30 font-mono text-[9px] text-[#74C69D]/50">
+          <div>GRID: {graph.nodes ? Object.keys(graph.nodes).length : 0} nós</div>
+          <div>DINOS: {dinosaurs.length}</div>
+          <div className="mt-2">
+            STATUS:
+            <span className={wsConnected ? "text-[#52B788]" : "text-red-400"}>
+              {wsConnected ? " ● CONECTADO" : " ● DESCONECTADO"}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Rota Info Overlay */}
-      {onNodeSelect && (
-        <div className="absolute left-4 bottom-4 z-30 border border-[#40E0D0]/50 bg-[#07120F]/90 p-3 font-mono text-[10px] max-w-xs">
-          <div className="text-[#40E0D0] font-mono text-[9px] uppercase tracking-wide mb-2">
+      {mode === "route" && onNodeSelect && (
+        <div className="absolute left-4 bottom-4 z-30 max-w-xs border border-[#40E0D0]/50 bg-[#07120F]/90 p-3 font-mono text-[10px]">
+          <div className="mb-2 text-[9px] uppercase tracking-wide text-[#40E0D0]">
             Modo de Roteamento
           </div>
           {!selectedNodes ? (
@@ -425,7 +668,7 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
               <div>▶ Clique no primeiro nó (origem)</div>
               <div className="mt-1 text-[9px] text-[#74C69D]/60">em verde</div>
             </div>
-          ) : selectedNodes.length === 1 ? (
+          ) : selectedCount === 1 ? (
             <div className="text-[#B7E4C7]/70">
               <div>▶ Clique no segundo nó (destino)</div>
               <div className="mt-1 text-[9px] text-[#74C69D]/60">em vermelho</div>
@@ -448,6 +691,18 @@ export const TerrestrialMap: React.FC<TerrestrialMapProps> = ({
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {mode === "interdict" && onEdgeToggle && (
+        <div className="absolute left-4 bottom-4 z-30 max-w-xs border border-red-500/50 bg-[#07120F]/90 p-3 font-mono text-[10px]">
+          <div className="mb-2 text-[9px] uppercase tracking-wide text-red-300">
+            Modo de Interdição
+          </div>
+          <div className="text-[#B7E4C7]/70">
+            <div>▶ Clique em qualquer rua para bloquear ou liberar.</div>
+            <div className="mt-1 text-[9px] text-[#74C69D]/60">Total ativo: {blockedRoads.length}</div>
+          </div>
         </div>
       )}
 

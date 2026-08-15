@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../services/api";
-import type { CityGraph, Dinosaur, RouteData, WebSocketMessage } from "../types/dinosaur";
+import type { BlockedEdge, CityGraph, Dinosaur, RouteData, WebSocketMessage } from "../types/dinosaur";
+
+export type SelectedNodes = [string] | [string, string] | null;
 
 export interface MapState {
   graph: CityGraph | null;
@@ -9,7 +11,12 @@ export interface MapState {
   error: string | null;
   wsConnected: boolean;
   route: RouteData | null;
-  selectedNodes: [string, string] | null;
+  selectedNodes: SelectedNodes;
+  interdictedEdges: BlockedEdge[];
+}
+
+function normalizeEdge(a: string, b: string): [string, string] {
+  return [a, b].sort() as [string, string];
 }
 
 export function useTerrialMap() {
@@ -23,6 +30,7 @@ export function useTerrialMap() {
     wsConnected: false,
     route: null,
     selectedNodes: null,
+    interdictedEdges: [],
   });
 
   // Inicializa o mapa
@@ -127,7 +135,7 @@ export function useTerrialMap() {
       if (currentSelected && currentSelected.length === 2) {
         return {
           ...prev,
-          selectedNodes: [nodeId] as [string],
+          selectedNodes: [nodeId],
           route: null,
         };
       }
@@ -141,7 +149,7 @@ export function useTerrialMap() {
       if (!currentSelected) {
         return {
           ...prev,
-          selectedNodes: [nodeId] as [string],
+          selectedNodes: [nodeId],
         };
       }
 
@@ -154,14 +162,15 @@ export function useTerrialMap() {
 
     // Calcula a rota se temos dois nós selecionados
     setState((prev) => {
-      if (prev.selectedNodes && prev.selectedNodes.length === 2) {
-        // Calcula a rota
+      const selected = prev.selectedNodes;
+
+      if (selected && selected.length === 2) {
         (async () => {
           try {
             const route = await api.calculateRoute(
               clientIdRef.current,
-              prev.selectedNodes![0],
-              prev.selectedNodes![1]
+              selected[0],
+              selected[1]
             );
             setState((prevState) => ({
               ...prevState,
@@ -199,5 +208,39 @@ export function useTerrialMap() {
     }));
   };
 
-  return { state, clientId: clientIdRef.current, ws: wsRef.current, selectNode, clearRoute };
+  const toggleInterdictEdge = async (nodeA: string, nodeB: string) => {
+    const edge = normalizeEdge(nodeA, nodeB);
+
+    setState((prev) => {
+      const exists = prev.interdictedEdges.some(([a, b]) => {
+        const pair = normalizeEdge(a, b);
+        return pair[0] === edge[0] && pair[1] === edge[1];
+      });
+
+      if (exists) {
+        api.clearInterdictEdge(nodeA, nodeB).catch((error) => {
+          console.error("Error removing interdiction:", error);
+        });
+
+        return {
+          ...prev,
+          interdictedEdges: prev.interdictedEdges.filter(([a, b]) => {
+            const pair = normalizeEdge(a, b);
+            return !(pair[0] === edge[0] && pair[1] === edge[1]);
+          }),
+        };
+      }
+
+      api.interdictEdge(nodeA, nodeB).catch((error) => {
+        console.error("Error adding interdiction:", error);
+      });
+
+      return {
+        ...prev,
+        interdictedEdges: [...prev.interdictedEdges, edge],
+      };
+    });
+  };
+
+  return { state, clientId: clientIdRef.current, ws: wsRef.current, selectNode, clearRoute, toggleInterdictEdge };
 }

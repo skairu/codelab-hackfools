@@ -163,6 +163,54 @@ export class BackendAPI {
       throw error;
     }
   }
+
+  async interdictEdge(nodeA: string, nodeB: string): Promise<{ status: string; edge: [string, string] }> {
+    try {
+      const response = await fetch(`${API_BASE}/admin/interdict`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          node_a: nodeA,
+          node_b: nodeB,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("Error interdicting edge:", error);
+      throw error;
+    }
+  }
+
+  async clearInterdictEdge(nodeA: string, nodeB: string): Promise<{ status: string; edge: [string, string] }> {
+    try {
+      const response = await fetch(`${API_BASE}/admin/interdict`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          node_a: nodeA,
+          node_b: nodeB,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("Error clearing road interdiction:", error);
+      throw error;
+    }
+  }
 }
 
 export const api = BackendAPI.getInstance();

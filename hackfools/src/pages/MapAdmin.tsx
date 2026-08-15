@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Map as MapIcon, TriangleAlert, Users } from "lucide-react";
 import AdminSubheader, { type AdminTab } from "../components/AdminSubheader";
+import { TerrestrialMap } from "../components/TerrestrialMap";
+import { useTerrialMap } from "../hooks/useTerrialMap";
 import Dashboard from "./Dashboard";
 
 // ---------------------------------------------------------------------------
@@ -130,6 +132,37 @@ const EQUIPES_ALOCADAS_INICIALMENTE = PROBLEMAS_INICIAIS.filter(
   (p) => p.estado === "a_caminho"
 ).length;
 
+const GRID_ROWS = 8;
+const GRID_COLS = 12;
+
+type GridPoint = {
+  row: number;
+  col: number;
+};
+
+type GridLine = {
+  start: GridPoint;
+  end: GridPoint;
+};
+
+function normalizeLine(a: GridPoint, b: GridPoint): string {
+  const points = [a, b].sort((left, right) => {
+    if (left.row !== right.row) return left.row - right.row;
+    return left.col - right.col;
+  });
+
+  return `${points[0].row}:${points[0].col}|${points[1].row}:${points[1].col}`;
+}
+
+function getGridPointPosition(row: number, col: number) {
+  const padding = 24;
+  const size = 34;
+  return {
+    x: padding + col * size,
+    y: padding + row * size,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Componente
 // ---------------------------------------------------------------------------
@@ -141,6 +174,74 @@ export default function ControlPanel() {
   const [equipesDisponiveis, setEquipesDisponiveis] = useState(
     TOTAL_EQUIPES - EQUIPES_ALOCADAS_INICIALMENTE
   );
+  const [selectedGridPoint, setSelectedGridPoint] = useState<GridPoint | null>(null);
+  const [drawnLines, setDrawnLines] = useState<GridLine[]>([]);
+  const [dangerZones, setDangerZones] = useState([
+    { id: 1, row: 1, col: 2, pulse: 0.7 },
+    { id: 2, row: 3, col: 6, pulse: 0.9 },
+    { id: 3, row: 5, col: 9, pulse: 0.65 },
+    { id: 4, row: 6, col: 3, pulse: 0.8 },
+  ]);
+  const { state, toggleInterdictEdge } = useTerrialMap();
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setDangerZones((previous) =>
+        previous.map((zone, index) => {
+          const phase = Date.now() / 1000 + index * 1.6;
+          const rowShift = Math.round(Math.sin(phase * 0.8 + index) * 1.2);
+          const colShift = Math.round(Math.cos(phase * 0.9 + index * 1.4) * 1.2);
+
+          const nextRow = Math.max(0, Math.min(GRID_ROWS - 1, zone.row + rowShift));
+          const nextCol = Math.max(0, Math.min(GRID_COLS - 1, zone.col + colShift));
+          const pulse = 0.55 + ((Math.sin(phase * 2.3) + 1) / 2) * 0.7;
+
+          return {
+            ...zone,
+            row: nextRow,
+            col: nextCol,
+            pulse,
+          };
+        })
+      );
+    }, 1200);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const handleGridPointClick = (point: GridPoint) => {
+    if (!selectedGridPoint) {
+      setSelectedGridPoint(point);
+      return;
+    }
+
+    if (selectedGridPoint.row === point.row && selectedGridPoint.col === point.col) {
+      setSelectedGridPoint(null);
+      return;
+    }
+
+    const rowDistance = Math.abs(selectedGridPoint.row - point.row);
+    const colDistance = Math.abs(selectedGridPoint.col - point.col);
+    const isAdjacent = rowDistance + colDistance === 1;
+
+    if (!isAdjacent) {
+      setSelectedGridPoint(null);
+      return;
+    }
+
+    const key = normalizeLine(selectedGridPoint, point);
+    setDrawnLines((prev) => {
+      const exists = prev.some((line) => normalizeLine(line.start, line.end) === key);
+
+      if (exists) {
+        return prev.filter((line) => normalizeLine(line.start, line.end) !== key);
+      }
+
+      return [...prev, { start: selectedGridPoint, end: point }];
+    });
+
+    setSelectedGridPoint(null);
+  };
 
   const problemasFiltrados = useMemo(() => {
     if (filtro === "todos") return problemas;
@@ -214,15 +315,129 @@ export default function ControlPanel() {
                       <h2 className="text-sm font-semibold uppercase tracking-wide text-[#D8F3DC]">Mapa Tático Geral</h2>
                     </div>
 
-                    <div className="mt-4 flex min-h-[420px] flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-[#2D6A4F]/40 bg-[#081C15]/40">
-                      <p className="text-sm text-[#74C69D]">
-                        {problemas.length} focos ativos no quadrante
-                      </p>
-                      <p className="text-[10px] uppercase tracking-wide text-[#40916C]">calibrando telemetria geoespacial...</p>
+                    <div className="mt-4 h-[420px] overflow-hidden rounded-xl border border-[#2D6A4F]/40 bg-[#081C15]/40">
+                      <TerrestrialMap
+                        graph={state.graph}
+                        dinosaurs={state.dinosaurs}
+                        loading={state.loading}
+                        error={state.error}
+                        wsConnected={state.wsConnected}
+                        interdictedEdges={state.interdictedEdges}
+                        mode="interdict"
+                        onEdgeToggle={toggleInterdictEdge}
+                      />
                     </div>
                   </div>
 
                   {/* Equipes disponíveis */}
+                  <div className="rounded-2xl border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-5 backdrop-blur-sm">
+                    <div className="flex items-center gap-3">
+                      <MapIcon className="h-5 w-5 text-[#52B788]" strokeWidth={1.75} />
+                      <h2 className="text-sm font-semibold uppercase tracking-wide text-[#D8F3DC]">Editor de Interdição em Grade</h2>
+                    </div>
+
+                    <div className="mt-4 overflow-hidden rounded-xl border border-[#2D6A4F]/40 bg-[#07120F]/70 p-3">
+                      <div className="mb-3 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-[#74C69D]">
+                        <span>Linhas ativas</span>
+                        <span className="rounded-full border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-red-300">{drawnLines.length}</span>
+                      </div>
+
+                      <svg
+                        viewBox="0 0 500 320"
+                        className="h-[320px] w-full rounded-lg bg-[#081C15]/50"
+                        role="img"
+                        aria-label="Editor de interdição em grade"
+                      >
+                        <defs>
+                          <pattern id="grid-pattern" width="34" height="34" patternUnits="userSpaceOnUse">
+                            <path d="M 34 0 L 0 0 0 34" fill="none" stroke="#2D6A4F" strokeOpacity="0.35" strokeWidth="1" />
+                          </pattern>
+                        </defs>
+
+                        <rect x="0" y="0" width="500" height="320" fill="url(#grid-pattern)" />
+
+                        {drawnLines.map((line, index) => {
+                          const start = getGridPointPosition(line.start.row, line.start.col);
+                          const end = getGridPointPosition(line.end.row, line.end.col);
+
+                          return (
+                            <line
+                              key={`${line.start.row}-${line.start.col}-${line.end.row}-${line.end.col}-${index}`}
+                              x1={start.x}
+                              y1={start.y}
+                              x2={end.x}
+                              y2={end.y}
+                              stroke="#EF4444"
+                              strokeWidth="5"
+                              strokeLinecap="round"
+                              opacity="0.95"
+                            />
+                          );
+                        })}
+
+                        <g opacity="0.9">
+                          {dangerZones.map((zone) => {
+                            const scanner = getGridPointPosition(zone.row, zone.col);
+
+                            return (
+                              <g key={zone.id}>
+                                <circle
+                                  cx={scanner.x}
+                                  cy={scanner.y}
+                                  r={28 + zone.pulse * 14}
+                                  fill="rgba(239, 68, 68, 0.18)"
+                                />
+                                <circle
+                                  cx={scanner.x}
+                                  cy={scanner.y}
+                                  r={18 + zone.pulse * 8}
+                                  fill="rgba(239, 68, 68, 0.12)"
+                                />
+                                <circle
+                                  cx={scanner.x}
+                                  cy={scanner.y}
+                                  r={6 + zone.pulse * 4}
+                                  fill="#FCA5A5"
+                                  opacity={0.8}
+                                />
+                                <circle
+                                  cx={scanner.x}
+                                  cy={scanner.y}
+                                  r={3}
+                                  fill="#FEE2E2"
+                                  opacity={1}
+                                />
+                              </g>
+                            );
+                          })}
+                        </g>
+
+                        {Array.from({ length: GRID_ROWS }).map((_, row) =>
+                          Array.from({ length: GRID_COLS }).map((__, col) => {
+                            const point = getGridPointPosition(row, col);
+                            const isSelected =
+                              selectedGridPoint?.row === row && selectedGridPoint?.col === col;
+
+                            return (
+                              <g key={`point-${row}-${col}`}>
+                                <circle
+                                  cx={point.x}
+                                  cy={point.y}
+                                  r={isSelected ? 9 : 7}
+                                  fill={isSelected ? "#40E0D0" : "#07120F"}
+                                  stroke={isSelected ? "#40E0D0" : "#74C69D"}
+                                  strokeWidth="2"
+                                  className="cursor-pointer"
+                                  onClick={() => handleGridPointClick({ row, col })}
+                                />
+                              </g>
+                            );
+                          })
+                        )}
+                      </svg>
+                    </div>
+                  </div>
+
                   <div className="rounded-2xl border border-[#2D6A4F]/40 bg-[#1B4332]/20 p-5 backdrop-blur-sm">
                     <div className="flex items-center gap-3">
                       <Users className="h-5 w-5 text-[#52B788]" strokeWidth={1.75} />

@@ -4,7 +4,7 @@ Mantidas num único lugar pra facilitar ajustes durante a demo/apresentação.
 """
 
 # --- simulação ---
-TICK_SECONDS = 3.0 # Intervalo (em segundos) entre atualizações da simulação
+TICK_SECONDS = 0.1 # Intervalo (em segundos) entre atualizações da simulação
 NUM_DINOS = 25 # Nº de dinos gerados automaticamente se o banco estiver vazio
 
 # --- roteamento ---
